@@ -1,7 +1,6 @@
 require("@matterlabs/hardhat-zksync-solc");
 require("@matterlabs/hardhat-zksync-verify");
 
-
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
   zksolc: {
@@ -11,6 +10,7 @@ module.exports = {
       optimizer: {
         enabled: true,
       },
+      viaIR: true, // Enables IR-based compilation to help with stack depth issues
     },
   },
   networks: {
@@ -44,6 +44,7 @@ module.exports = {
         enabled: true,
         runs: 200,
       },
+      viaIR: true, // Enables IR-based compilation for Solidity
     },
   },
 };
