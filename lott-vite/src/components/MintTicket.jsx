@@ -30,15 +30,26 @@ const MintTicket = () => {
     try {
       setLoading(true);
       const contract = await getContract();
-      
+      console.log("Contract instance:", contract);
       // Convert numbers to integers for contract
       const numbersForContract = numbers.map(num => parseInt(num));
+
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const network = await provider.getNetwork();
+      console.log("Connected to network:", network);
       
+      const estimatedGas = await contract.estimateGas.mintTicket(numbersForContract, {
+        value: ethers.utils.parseEther("0.01"),
+      });
+      console.log("Estimated Gas:", estimatedGas.toString());
+      
+
       // Call contract mint function with value
       const tx = await contract.mintTicket(
         numbersForContract,
         {
-          value: ethers.utils.parseEther("0.01") // MINT_PRICE from contract
+          value: ethers.utils.parseEther("0.01"), // MINT_PRICE from contract
+          gasLimit: 500000
         }
       );
 

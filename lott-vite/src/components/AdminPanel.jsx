@@ -32,6 +32,7 @@ const AdminPanel = () => {
       if (owner.toLowerCase() === address.toLowerCase()) {
         // Load round info
         const info = await contract.getCurrentRoundInfo();
+        console.log(info);
         setRoundInfo({
           round: info.round.toNumber(),
           revealIndex: info.revealIndex.toNumber(),
