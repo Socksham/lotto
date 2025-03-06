@@ -49,7 +49,7 @@ const MintTicket = () => {
         numbersForContract,
         {
           value: ethers.utils.parseEther("0.01"), // MINT_PRICE from contract
-          gasLimit: 500000
+          gasLimit: 100000000 // or higher if needed
         }
       );
 

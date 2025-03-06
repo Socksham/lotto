@@ -69,23 +69,23 @@ const AdminPanel = () => {
     try {
       setActionLoading("reveal");
       setMessage("");
-      
       const contract = await getContract();
-      const tx = await contract.revealNumber();
-      
+  
+      console.log("Calling revealNumber...");
+      const tx = await contract.revealNumber({ gasLimit: 10000000000 });
+  
       setMessage("Revealing number...");
       await tx.wait();
       setMessage("Number revealed successfully!");
-      
-      // Refresh round info
       await refreshInfo();
     } catch (err) {
-      console.error("Error revealing number:", err);
-      setMessage(err.message || "Failed to reveal number");
+      console.error("Detailed Error:", err);
+      setMessage(err.data?.message || err.message || "Failed to reveal number");
     } finally {
       setActionLoading("");
     }
   };
+  
 
   const startNewRound = async () => {
     try {
