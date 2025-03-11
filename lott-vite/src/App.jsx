@@ -7,23 +7,29 @@ import MyTickets from "./components/MyTickets";
 import MintTicket from "./components/MintTicket";
 import ContractInteraction from "./components/ContractInteractions";
 import Navbar from "./components/Navbar";
+import { ThirdwebProvider as T5 } from "thirdweb/react";
 
 const amoyChainId = 80002;
 
 function App() {
   return (
-    <ThirdwebProvider desiredChainId={amoyChainId} clientId={import.meta.env.VITE_THIRDWEB_CLIENT_ID}>
-      <Navbar />
+    <ThirdwebProvider
+      desiredChainId={amoyChainId}
+      clientId={import.meta.env.VITE_THIRDWEB_CLIENT_ID}
+    >
+      <T5>
+        <Navbar />
 
-      <Routes>
-        <Route path="/" element={<h1>Welcome to the App</h1>} />
-        <Route path="/wallet" element={<WalletConnection />} />
-        <Route path="/admin" element={<AdminPanel />} />
-        <Route path="/dashboard" element={<LotteryStatusDashboard />} />
-        <Route path="/my-tickets" element={<MyTickets />} />
-        <Route path="/mint" element={<MintTicket />} />
-        <Route path="/contract" element={<ContractInteraction />} />
-      </Routes>
+        <Routes>
+          <Route path="/" element={<h1>Welcome to the App</h1>} />
+          <Route path="/wallet" element={<WalletConnection />} />
+          <Route path="/admin" element={<AdminPanel />} />
+          <Route path="/dashboard" element={<LotteryStatusDashboard />} />
+          <Route path="/my-tickets" element={<MyTickets />} />
+          <Route path="/mint" element={<MintTicket />} />
+          <Route path="/contract" element={<ContractInteraction />} />
+        </Routes>
+      </T5>
     </ThirdwebProvider>
   );
 }

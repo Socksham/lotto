@@ -18,6 +18,10 @@ const MintTicket = () => {
     }
   };
 
+  const generateRandomNumbers = () => {
+    return Array.from({ length: 6 }, () => Math.floor(Math.random() * 100) + 1);
+  };
+
   const mintTicket = async (e) => {
     e.preventDefault();
     
@@ -37,21 +41,15 @@ const MintTicket = () => {
       const provider = new ethers.providers.Web3Provider(window.ethereum);
       const network = await provider.getNetwork();
       console.log("Connected to network:", network);
-      
+
       const estimatedGas = await contract.estimateGas.mintTicket(numbersForContract, {
         value: ethers.utils.parseEther("0.01"),
       });
-      console.log("Estimated Gas:", estimatedGas.toString());
       
-
-      // Call contract mint function with value
-      const tx = await contract.mintTicket(
-        numbersForContract,
-        {
-          value: ethers.utils.parseEther("0.01"), // MINT_PRICE from contract
-          gasLimit: 100000000 // or higher if needed
-        }
-      );
+      const tx = await contract.mintTicket(numbersForContract, {
+        value: ethers.utils.parseEther("0.01"),
+        gasLimit: estimatedGas.mul(2), // Double the estimated gas for safety
+      });
 
       setMessage("Minting your ticket...");
       await tx.wait();
