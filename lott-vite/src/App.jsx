@@ -10,6 +10,7 @@ import ContractInteraction from "./components/ContractInteractions";
 import Navbar from "./components/Navbar";
 import { ThirdwebProvider as T5 } from "thirdweb/react";
 import React from "react";
+import Marketplace from "./components/Marketplace";
 
 const amoyChainId = 80002;
 
@@ -30,6 +31,7 @@ function App() {
           <Route path="/my-tickets" element={<MyTickets Nav={navComp}/>} />
           <Route path="/mint" element={<MintTicket Nav={navComp}/>} />
           <Route path="/contract" element={<ContractInteraction Nav={navComp}/>} />
+          <Route path="/marketplace" element={<Marketplace />} />
         </Routes>
       </T5>
     </ThirdwebProvider>

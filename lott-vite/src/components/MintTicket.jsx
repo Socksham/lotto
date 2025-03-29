@@ -20,7 +20,7 @@ const MintTicket = ({ Nav }) => {
   };
 
   const handleRandomize = () => {
-    const randomNumbers = Array.from({ length: 6 }, () => 
+    const randomNumbers = Array.from({ length: 6 }, () =>
       Math.floor(Math.random() * 10).toString()
     );
     setNumbers(randomNumbers);
@@ -28,37 +28,52 @@ const MintTicket = ({ Nav }) => {
 
   const mintTicket = async (e) => {
     e.preventDefault();
-    
-    // Validate all numbers are filled
-    if (numbers.some(num => num === "")) {
-      setMessage("Please fill in all numbers");
+
+    // Validate all numbers are filled and within the valid range
+    if (
+      numbers.some(
+        (num) =>
+          num === "" ||
+          isNaN(parseInt(num)) ||
+          parseInt(num) < 0 ||
+          parseInt(num) > 9
+      )
+    ) {
+      setMessage("Please enter valid numbers (0-9) in all fields.");
       return;
     }
 
     try {
       setLoading(true);
       const contract = await getContract();
-      console.log("Contract instance:", contract);
-      // Convert numbers to integers for contract
-      const numbersForContract = numbers.map(num => parseInt(num));
+
+      // Convert numbers to integers
+      const numbersForContract = numbers.map((num) => parseInt(num));
+
+      console.log("Numbers being sent to contract:", numbersForContract);
 
       const provider = new ethers.providers.Web3Provider(window.ethereum);
       const network = await provider.getNetwork();
       console.log("Connected to network:", network);
 
-      const estimatedGas = await contract.estimateGas.mintTicket(numbersForContract, {
-        value: ethers.utils.parseEther("0.01"),
-      });
-      
+      const estimatedGas = await contract.estimateGas.mintTicket(
+        numbersForContract,
+        {
+          value: ethers.utils.parseEther("0.01"),
+        }
+      );
+
+      console.log(estimatedGas)
+
       const tx = await contract.mintTicket(numbersForContract, {
         value: ethers.utils.parseEther("0.01"),
-        gasLimit: estimatedGas.mul(2), // Double the estimated gas for safety
+        gasLimit: estimatedGas.mul(2),
       });
 
       setMessage("Minting your ticket...");
       await tx.wait();
       setMessage("Successfully minted your lottery ticket!");
-      
+
       // Reset form
       setNumbers(Array(6).fill(""));
     } catch (error) {
@@ -90,7 +105,9 @@ const MintTicket = ({ Nav }) => {
           <form onSubmit={mintTicket} className="space-y-8">
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <h3 className="text-xl font-semibold text-purple-200">Select Your Numbers</h3>
+                <h3 className="text-xl font-semibold text-purple-200">
+                  Select Your Numbers
+                </h3>
                 <button
                   type="button"
                   onClick={handleRandomize}
@@ -101,7 +118,7 @@ const MintTicket = ({ Nav }) => {
                   <span className="text-sm">Randomize</span>
                 </button>
               </div>
-              
+
               <div className="grid grid-cols-6 gap-4">
                 {numbers.map((number, index) => (
                   <div key={index} className="relative group">
@@ -109,7 +126,9 @@ const MintTicket = ({ Nav }) => {
                     <input
                       type="text"
                       value={number}
-                      onChange={(e) => handleNumberChange(index, e.target.value)}
+                      onChange={(e) =>
+                        handleNumberChange(index, e.target.value)
+                      }
                       className="relative w-full h-16 text-center text-2xl bg-gray-900 text-white rounded-lg border-none focus:outline-none focus:ring-2 focus:ring-purple-500"
                       maxLength={1}
                       placeholder="#"
@@ -118,7 +137,7 @@ const MintTicket = ({ Nav }) => {
                   </div>
                 ))}
               </div>
-              
+
               <p className="text-sm text-gray-400 text-center mt-2">
                 Pick your lucky numbers (0-9) for each position
               </p>
@@ -129,15 +148,17 @@ const MintTicket = ({ Nav }) => {
                 <span className="text-gray-400">Ticket Price:</span>
                 <span className="text-xl font-bold text-white">0.01 ETH</span>
               </div>
-              
+
               <button
                 type="submit"
                 disabled={loading || !address}
                 className="relative w-full group"
               >
                 <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg blur opacity-75 group-hover:opacity-100 transition duration-300"></div>
-                <div className={`relative w-full py-3 px-6 bg-black rounded-lg flex items-center justify-center space-x-2 
-                              ${(!address || loading) ? 'opacity-70' : ''}`}>
+                <div
+                  className={`relative w-full py-3 px-6 bg-black rounded-lg flex items-center justify-center space-x-2 
+                              ${!address || loading ? "opacity-70" : ""}`}
+                >
                   {loading ? (
                     <>
                       <Loader className="h-5 w-5 animate-spin" />
@@ -159,9 +180,13 @@ const MintTicket = ({ Nav }) => {
               )}
 
               {message && (
-                <div className={`mt-4 p-3 rounded-lg text-sm text-center ${
-                  message.includes("Success") ? "bg-green-900/30 text-green-400 border border-green-700" : "bg-red-900/30 text-red-400 border border-red-700"
-                }`}>
+                <div
+                  className={`mt-4 p-3 rounded-lg text-sm text-center ${
+                    message.includes("Success")
+                      ? "bg-green-900/30 text-green-400 border border-green-700"
+                      : "bg-red-900/30 text-red-400 border border-red-700"
+                  }`}
+                >
                   {message}
                 </div>
               )}
@@ -169,7 +194,7 @@ const MintTicket = ({ Nav }) => {
           </form>
         </div>
       </div>
-      
+
       {/* Footer */}
       <footer className="bg-black/30 py-6 mt-12">
         <div className="container mx-auto px-8 text-center">
@@ -210,7 +235,7 @@ export default MintTicket;
 
 //   const mintTicket = async (e) => {
 //     e.preventDefault();
-    
+
 //     // Validate all numbers are filled
 //     if (numbers.some(num => num === "")) {
 //       setMessage("Please fill in all numbers");
@@ -231,7 +256,7 @@ export default MintTicket;
 //       const estimatedGas = await contract.estimateGas.mintTicket(numbersForContract, {
 //         value: ethers.utils.parseEther("0.01"),
 //       });
-      
+
 //       const tx = await contract.mintTicket(numbersForContract, {
 //         value: ethers.utils.parseEther("0.01"),
 //         gasLimit: estimatedGas.mul(2), // Double the estimated gas for safety
@@ -240,7 +265,7 @@ export default MintTicket;
 //       setMessage("Minting your ticket...");
 //       await tx.wait();
 //       setMessage("Successfully minted your lottery ticket!");
-      
+
 //       // Reset form
 //       setNumbers(Array(6).fill(""));
 //     } catch (error) {
@@ -254,7 +279,7 @@ export default MintTicket;
 //   return (
 //     <div className="max-w-md mx-auto p-6 bg-gray-800 rounded-lg shadow-xl">
 //       <h2 className="text-2xl font-bold mb-6 text-white">Mint Lottery Ticket</h2>
-      
+
 //       <form onSubmit={mintTicket} className="space-y-6">
 //         <div className="grid grid-cols-6 gap-2">
 //           {numbers.map((number, index) => (
@@ -274,7 +299,7 @@ export default MintTicket;
 //         <button
 //           type="submit"
 //           disabled={loading || !address}
-//           className="w-full py-3 px-6 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 
+//           className="w-full py-3 px-6 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600
 //                    text-white font-semibold rounded-lg transition-colors"
 //         >
 //           {loading ? "Minting..." : "Mint Ticket (0.01 ETH)"}

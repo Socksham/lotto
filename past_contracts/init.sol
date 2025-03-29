@@ -11,75 +11,62 @@ import "@openzeppelin/contracts/utils/Base64.sol";
 contract LotteryNFT is ERC721, Ownable, ReentrancyGuard {
     using Strings for uint256;
     using Counters for Counters.Counter;
-
+    
     struct Ticket {
-        uint8[6] numbers; // Use uint8 for gas optimization
+        uint256[6] numbers;
         bool claimed;
     }
-
+    
     Counters.Counter private _tokenIds;
     uint256 public constant MINT_PRICE = 0.01 ether;
     uint256 public constant TRANSACTION_FEE = 250; // 2.5% in basis points
     uint256 public constant OWNER_FEE = 100; // 1% in basis points
-
+    
     mapping(uint256 => Ticket) public tickets;
-    mapping(uint256 => uint8) public revealedNumbers; // Use uint8 for gas optimization
-    mapping(bytes32 => bool) public ticketExists; // Prevent duplicate tickets
-    mapping(address => uint256) public userTicketCount; // Track tickets per user
-    mapping(address => uint256[]) public userTickets; // Retrieve tickets by user
-
+    mapping(uint256 => uint256) public revealedNumbers;
     uint256 public currentRound;
     uint256 public currentRevealIndex;
     uint256 public lastRevealTime;
     uint256 public constant REVEAL_INTERVAL = 2 days;
-
+    
     uint256 public accumulatedPrize;
     bool public roundComplete;
-    address public winner; // Track the winner of the current round
-
-    event TicketMinted(uint256 indexed tokenId, address indexed owner, uint8[6] numbers);
-    event NumberRevealed(uint256 indexed round, uint8 number, uint256 indexed revealIndex);
+    
+    event TicketMinted(uint256 indexed tokenId, address indexed owner, uint256[6] numbers);
+    event NumberRevealed(uint256 indexed round, uint256 number, uint256 indexed revealIndex);
     event PrizeAwarded(address indexed winner, uint256 amount);
     event NewRoundStarted(uint256 indexed round);
-
+    
     constructor() ERC721("LotteryNFT", "LOTTO") {}
-
-    function mintTicket(uint8[6] memory numbers) public payable nonReentrant {
+    
+    function mintTicket(uint256[6] memory numbers) public payable nonReentrant {
         require(msg.value >= MINT_PRICE, "Insufficient payment");
-        require(userTicketCount[msg.sender] < 15, "Maximum of 15 tickets per user");
-
+        
         // Validate numbers (0-9 range)
-        for (uint i = 0; i < 6; i++) {
+        for(uint i = 0; i < 6; i++) {
             require(numbers[i] >= 0 && numbers[i] <= 9, "Invalid number range, must be between 0 and 9");
         }
-
-        // Check for duplicate tickets
-        bytes32 ticketHash = keccak256(abi.encodePacked(numbers));
-        require(!ticketExists[ticketHash], "Ticket with these numbers already exists");
-        ticketExists[ticketHash] = true;
-
+        
         _tokenIds.increment();
         uint256 newTokenId = _tokenIds.current();
-
+        
         _safeMint(msg.sender, newTokenId);
         tickets[newTokenId] = Ticket(numbers, false);
-
-        userTicketCount[msg.sender]++;
-        userTickets[msg.sender].push(newTokenId);
+        
         accumulatedPrize += msg.value;
-
+        
         emit TicketMinted(newTokenId, msg.sender, numbers);
     }
 
     function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
         require(_exists(tokenId), "Token does not exist");
-
+        
         Ticket memory ticket = tickets[tokenId];
         string memory status = getTicketStatus(tokenId);
         string memory statusColor = getStatusColor(status);
-
+        
         bytes memory image = generateSVGImage(tokenId, ticket, status, statusColor);
-
+        
         return string(
             abi.encodePacked(
                 'data:application/json;base64,',
@@ -99,7 +86,7 @@ contract LotteryNFT is ERC721, Ownable, ReentrancyGuard {
             )
         );
     }
-
+    
     function generateSVGImage(
         uint256 tokenId,
         Ticket memory ticket,
@@ -122,13 +109,13 @@ contract LotteryNFT is ERC721, Ownable, ReentrancyGuard {
             '</svg>'
         );
     }
-
-    function generateNumberCircles(uint8[6] memory numbers) internal pure returns (bytes memory) {
+    
+    function generateNumberCircles(uint256[6] memory numbers) internal pure returns (bytes memory) {
         bytes memory circles;
         uint256 startX = 90;
         uint256 spacing = 50;
-
-        for (uint i = 0; i < 6; i++) {
+        
+        for(uint i = 0; i < 6; i++) {
             circles = abi.encodePacked(
                 circles,
                 '<g>',
@@ -136,16 +123,16 @@ contract LotteryNFT is ERC721, Ownable, ReentrancyGuard {
                 '" cy="200" r="25" fill="#3b82f6"/>',
                 '<text x="', (startX + (i * spacing)).toString(),
                 '" y="208" font-family="Arial" font-size="20" fill="white" text-anchor="middle">',
-                uint256(numbers[i]).toString(),
+                numbers[i].toString(),
                 '</text></g>'
             );
         }
         return circles;
     }
-
-    function generateAttributes(uint8[6] memory numbers, string memory status) internal pure returns (string memory) {
+    
+    function generateAttributes(uint256[6] memory numbers, string memory status) internal pure returns (string memory) {
         string memory attrs;
-        for (uint i = 0; i < 6; i++) {
+        for(uint i = 0; i < 6; i++) {
             attrs = string(
                 abi.encodePacked(
                     attrs,
@@ -153,7 +140,7 @@ contract LotteryNFT is ERC721, Ownable, ReentrancyGuard {
                     '{"trait_type": "Number ',
                     (i + 1).toString(),
                     '", "value": "',
-                    uint256(numbers[i]).toString(),
+                    numbers[i].toString(),
                     '"}'
                 )
             );
@@ -168,18 +155,18 @@ contract LotteryNFT is ERC721, Ownable, ReentrancyGuard {
         );
         return attrs;
     }
-
+    
     function getTicketStatus(uint256 tokenId) internal view returns (string memory) {
         Ticket memory ticket = tickets[tokenId];
-
+        
         if (ticket.claimed) {
             return "Claimed";
         }
-
+        
         if (currentRevealIndex == 0) {
             return "Active";
         }
-
+        
         bool matchesSoFar = true;
         for (uint i = 0; i < currentRevealIndex; i++) {
             if (ticket.numbers[i] != revealedNumbers[i]) {
@@ -187,7 +174,7 @@ contract LotteryNFT is ERC721, Ownable, ReentrancyGuard {
                 break;
             }
         }
-
+        
         if (!matchesSoFar) {
             return "Invalid";
         } else if (currentRevealIndex == 6) {
@@ -199,7 +186,7 @@ contract LotteryNFT is ERC721, Ownable, ReentrancyGuard {
             ));
         }
     }
-
+    
     function getStatusColor(string memory status) internal pure returns (string memory) {
         bytes32 statusHash = keccak256(bytes(status));
         if (statusHash == keccak256(bytes("Active"))) return "#22c55e";
@@ -208,69 +195,79 @@ contract LotteryNFT is ERC721, Ownable, ReentrancyGuard {
         if (statusHash == keccak256(bytes("Claimed"))) return "#6b7280";
         return "#3b82f6";
     }
-
+    
     function revealNumber() public onlyOwner {
         require(!roundComplete, "Start new round first");
         require(block.timestamp >= lastRevealTime + REVEAL_INTERVAL, "Too early for next reveal");
-
+        
         // Using block difficulty and timestamp for randomness
         // Note: In production, consider using Chainlink VRF
-        uint8 number = uint8(uint256(keccak256(abi.encodePacked(block.prevrandao, block.timestamp)))) % 10;
-
+        uint256 number = uint256(keccak256(abi.encodePacked(block.prevrandao, block.timestamp))) % 49 + 1;
+        
         revealedNumbers[currentRevealIndex] = number;
         emit NumberRevealed(currentRound, number, currentRevealIndex);
-
+        
         currentRevealIndex++;
         lastRevealTime = block.timestamp;
-
-        if (currentRevealIndex == 6) {
+        
+        if(currentRevealIndex == 6) {
             roundComplete = true;
         }
     }
-
+    
     function claimPrize(uint256 tokenId) public nonReentrant {
         require(roundComplete, "Round not complete");
         require(ownerOf(tokenId) == msg.sender, "Not token owner");
         require(!tickets[tokenId].claimed, "Prize already claimed");
-        require(winner == address(0), "Prize already claimed by another winner");
-
+        
         bool isWinner = true;
-        for (uint256 i = 0; i < 6; i++) {
-            if (tickets[tokenId].numbers[i] != revealedNumbers[i]) {
+        for(uint256 i = 0; i < 6; i++) {
+            if(tickets[tokenId].numbers[i] != revealedNumbers[i]) {
                 isWinner = false;
                 break;
             }
         }
-
+        
         require(isWinner, "Ticket numbers don't match");
-
+        
         tickets[tokenId].claimed = true;
-        winner = msg.sender;
         uint256 prize = accumulatedPrize;
         accumulatedPrize = 0;
-
+        
         (bool sent, ) = msg.sender.call{value: prize}("");
         require(sent, "Failed to send prize");
-
+        
         emit PrizeAwarded(msg.sender, prize);
     }
-
+    
     function startNewRound() public onlyOwner {
         require(roundComplete, "Current round not complete");
-
+        
         currentRound++;
         currentRevealIndex = 0;
         roundComplete = false;
         lastRevealTime = block.timestamp;
-        winner = address(0); // Reset winner
-
+        
         emit NewRoundStarted(currentRound);
     }
-
-    function getTicketsByUser(address user) public view returns (uint256[] memory) {
-        return userTickets[user];
+    
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 tokenId
+    ) internal virtual {
+        super._beforeTokenTransfer(from, to, tokenId, 1); // Add batchSize argument
+        
+        if(from != address(0) && to != address(0)) {
+            uint256 fee = (msg.value * TRANSACTION_FEE) / 10000;
+            uint256 ownerFee = (msg.value * OWNER_FEE) / 10000;
+            
+            accumulatedPrize += fee;
+            payable(owner()).transfer(ownerFee);
+        }
     }
-
+    
+    // View functions for frontend
     function getCurrentRoundInfo() public view returns (
         uint256 round,
         uint256 revealIndex,
@@ -286,10 +283,10 @@ contract LotteryNFT is ERC721, Ownable, ReentrancyGuard {
             lastRevealTime + REVEAL_INTERVAL
         );
     }
-
-    function getRevealedNumbers() public view returns (uint8[] memory) {
-        uint8[] memory numbers = new uint8[](currentRevealIndex);
-        for (uint256 i = 0; i < currentRevealIndex; i++) {
+    
+    function getRevealedNumbers() public view returns (uint256[] memory) {
+        uint256[] memory numbers = new uint256[](currentRevealIndex);
+        for(uint256 i = 0; i < currentRevealIndex; i++) {
             numbers[i] = revealedNumbers[i];
         }
         return numbers;
