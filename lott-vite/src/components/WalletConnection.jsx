@@ -1,11 +1,12 @@
 import { ConnectWallet, useAddress, useDisconnect } from "@thirdweb-dev/react";
 
-const WalletConnection = () => {
+const WalletConnection = ({ Nav }) => {
   const address = useAddress();
   const disconnect = useDisconnect();
 
   return (
     <div className="flex flex-col items-center gap-4 p-4">
+      {Nav}
       {address ? (
         <div className="flex flex-col items-center gap-2">
           <p className="text-gray-200">

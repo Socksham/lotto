@@ -3,7 +3,7 @@ import { getContract } from "../utils/contract";
 import { ethers } from "ethers";
 import { Ticket, Award, Clock } from "lucide-react";
 
-const LotteryStatusDashboard = () => {
+const LotteryStatusDashboard = ({ Nav }) => {
   const [roundInfo, setRoundInfo] = useState({
     round: 0,
     revealIndex: 0,
@@ -68,6 +68,7 @@ const LotteryStatusDashboard = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-black text-white">
+        {Nav}
         <div className="container mx-auto px-8 py-12">
           <div className="animate-pulse space-y-6 max-w-lg mx-auto">
             <div className="h-8 bg-purple-800/30 rounded w-3/4"></div>
@@ -87,24 +88,7 @@ const LotteryStatusDashboard = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-black text-white">
       {/* Navigation */}
-      <nav className="px-8 py-6 flex justify-between items-center">
-        <div className="flex items-center space-x-4">
-          <Ticket className="h-8 w-8 text-purple-500" />
-          <h1 className="text-2xl font-bold text-white">
-            NumberDrop Lottery
-          </h1>
-        </div>
-        <div className="space-x-6">
-          <div className="relative group inline-block">
-            <div className="absolute -inset-0.5 bg-gradient-to-r from-pink-600 to-purple-600 rounded-lg blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200"></div>
-            <div className="relative px-4 py-2 bg-black rounded-lg">
-              <span className="text-purple-400">
-                🚀 Connect
-              </span>
-            </div>
-          </div>
-        </div>
-      </nav>
+      {Nav}
 
       <div className="container mx-auto px-8 py-12">
         <div className="text-center mb-8">

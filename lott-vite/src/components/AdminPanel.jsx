@@ -3,7 +3,7 @@ import { getContract } from "../utils/contract";
 import { useAddress } from "@thirdweb-dev/react";
 import { Clock, Ticket, Award, Rocket } from "lucide-react";
 
-const AdminPanel = () => {
+const AdminPanel = ({ Nav }) => {
   const address = useAddress();
   const [isOwner, setIsOwner] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -137,14 +137,7 @@ const AdminPanel = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-black text-white">
         {/* Navigation */}
-        <nav className="px-8 py-6 flex justify-between items-center">
-          <div className="flex items-center space-x-4">
-            <Ticket className="h-8 w-8 text-purple-500" />
-            <h1 className="text-2xl font-bold text-white">
-              NumberDrop Admin
-            </h1>
-          </div>
-        </nav>
+        {Nav}
         
         <div className="container mx-auto px-8 py-16">
           <div className="bg-purple-800/30 rounded-2xl p-8 backdrop-blur-lg max-w-2xl mx-auto">
@@ -164,24 +157,7 @@ const AdminPanel = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-black text-white">
         {/* Navigation */}
-        <nav className="px-8 py-6 flex justify-between items-center">
-          <div className="flex items-center space-x-4">
-            <Ticket className="h-8 w-8 text-purple-500" />
-            <h1 className="text-2xl font-bold text-white">
-              NumberDrop Admin
-            </h1>
-          </div>
-          <div className="space-x-6">
-            <div className="relative group inline-block">
-              <div className="absolute -inset-0.5 bg-gradient-to-r from-pink-600 to-purple-600 rounded-lg blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200"></div>
-              <div className="relative px-4 py-2 bg-black rounded-lg">
-                <span className="text-purple-400">
-                  🚀 Connect
-                </span>
-              </div>
-            </div>
-          </div>
-        </nav>
+        {Nav}
         
         <div className="container mx-auto px-8 py-16">
           <div className="bg-purple-800/30 rounded-2xl p-8 backdrop-blur-lg max-w-2xl mx-auto">
@@ -199,24 +175,7 @@ const AdminPanel = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-black text-white">
         {/* Navigation */}
-        <nav className="px-8 py-6 flex justify-between items-center">
-          <div className="flex items-center space-x-4">
-            <Ticket className="h-8 w-8 text-purple-500" />
-            <h1 className="text-2xl font-bold text-white">
-              NumberDrop Admin
-            </h1>
-          </div>
-          <div className="space-x-6">
-            <div className="relative group inline-block">
-              <div className="absolute -inset-0.5 bg-gradient-to-r from-pink-600 to-purple-600 rounded-lg blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200"></div>
-              <div className="relative px-4 py-2 bg-black rounded-lg">
-                <span className="text-purple-400">
-                  Connected
-                </span>
-              </div>
-            </div>
-          </div>
-        </nav>
+        {Nav}
         
         <div className="container mx-auto px-8 py-16">
           <div className="bg-purple-800/30 rounded-2xl p-8 backdrop-blur-lg max-w-2xl mx-auto">
@@ -236,24 +195,7 @@ const AdminPanel = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-black text-white">
       {/* Navigation */}
-      <nav className="px-8 py-6 flex justify-between items-center">
-        <div className="flex items-center space-x-4">
-          <Ticket className="h-8 w-8 text-purple-500" />
-          <h1 className="text-2xl font-bold text-white">
-            NumberDrop Admin
-          </h1>
-        </div>
-        <div className="space-x-6">
-          <div className="relative group inline-block">
-            <div className="absolute -inset-0.5 bg-gradient-to-r from-pink-600 to-purple-600 rounded-lg blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200"></div>
-            <div className="relative px-4 py-2 bg-black rounded-lg">
-              <span className="text-purple-400">
-                Connected
-              </span>
-            </div>
-          </div>
-        </div>
-      </nav>
+      {Nav}
 
       {/* Main Content */}
       <div className="container mx-auto px-8 py-16">

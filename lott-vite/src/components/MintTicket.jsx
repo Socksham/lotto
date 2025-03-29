@@ -4,7 +4,7 @@ import { useAddress } from "@thirdweb-dev/react";
 import { ethers } from "ethers";
 import { Ticket, Shuffle, Loader } from "lucide-react";
 
-const MintTicket = () => {
+const MintTicket = ({ Nav }) => {
   const [numbers, setNumbers] = useState(Array(6).fill(""));
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -72,24 +72,7 @@ const MintTicket = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-black text-white">
       {/* Navigation */}
-      <nav className="px-8 py-6 flex justify-between items-center">
-        <div className="flex items-center space-x-4">
-          <Ticket className="h-8 w-8 text-purple-500" />
-          <h1 className="text-2xl font-bold text-white">
-            NumberDrop Lottery
-          </h1>
-        </div>
-        <div className="space-x-6">
-          <div className="relative group inline-block">
-            <div className="absolute -inset-0.5 bg-gradient-to-r from-pink-600 to-purple-600 rounded-lg blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200"></div>
-            <div className="relative px-4 py-2 bg-black rounded-lg">
-              <span className="text-purple-400">
-                {address ? `🚀 ${address.slice(0, 6)}...${address.slice(-4)}` : "🚀 Connect"}
-              </span>
-            </div>
-          </div>
-        </div>
-      </nav>
+      {Nav}
 
       <div className="container mx-auto px-8 py-12">
         <div className="text-center mb-8">

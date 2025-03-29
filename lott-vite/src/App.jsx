@@ -12,6 +12,9 @@ import { ThirdwebProvider as T5 } from "thirdweb/react";
 import React from "react";
 
 const amoyChainId = 80002;
+
+const navComp = <Navbar/>
+
 function App() {
   return (
     <ThirdwebProvider
@@ -19,15 +22,14 @@ function App() {
       clientId={import.meta.env.VITE_THIRDWEB_CLIENT_ID}
     >
       <T5>
-        <Navbar />
         <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/wallet" element={<WalletConnection />} />
-          <Route path="/admin" element={<AdminPanel />} />
-          <Route path="/dashboard" element={<LotteryStatusDashboard />} />
-          <Route path="/my-tickets" element={<MyTickets />} />
-          <Route path="/mint" element={<MintTicket />} />
-          <Route path="/contract" element={<ContractInteraction />} />
+          <Route path="/" element={<LandingPage Nav={navComp}/>} />
+          <Route path="/wallet" element={<WalletConnection Nav={navComp}/>} />
+          <Route path="/admin" element={<AdminPanel Nav={navComp}/>} />
+          <Route path="/dashboard" element={<LotteryStatusDashboard Nav={navComp}/>} />
+          <Route path="/my-tickets" element={<MyTickets Nav={navComp}/>} />
+          <Route path="/mint" element={<MintTicket Nav={navComp}/>} />
+          <Route path="/contract" element={<ContractInteraction Nav={navComp}/>} />
         </Routes>
       </T5>
     </ThirdwebProvider>
