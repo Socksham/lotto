@@ -1,17 +1,49 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Rocket, Ticket, Clock, Award } from "lucide-react";
-import { useState } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "./Navbar";
+import { getContract } from "../utils/contract";
+import { ethers } from "ethers";
 
 function LandingPage({ Nav }) {
-  const lotteryNumbers = [
-    { value: 42, revealed: true },
-    { value: 17, revealed: true },
-    { value: 63, revealed: true },
-    { value: null, revealed: false },
-    { value: null, revealed: false },
-  ];
+  const [roundInfo, setRoundInfo] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchRoundInfo();
+    // Set up an interval to refresh data every minute
+    const interval = setInterval(fetchRoundInfo, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const fetchRoundInfo = async () => {
+    try {
+      setLoading(true);
+      const contract = await getContract();
+      
+      // Get current round info and revealed numbers
+      const info = await contract.getCurrentRoundInfo();
+      const revealedNumbers = await contract.getRevealedNumbers();
+      
+      setRoundInfo({
+        currentRound: info.round.toNumber(),
+        revealIndex: info.revealIndex.toNumber(),
+        isComplete: info.isComplete,
+        prize: ethers.utils.formatEther(info.prize),
+        nextRevealTime: new Date(info.nextRevealTime.toNumber() * 1000),
+        numbers: revealedNumbers.map(n => ({
+          value: n.toNumber(),
+          revealed: true
+        })).concat(
+          Array(6 - revealedNumbers.length).fill({ value: null, revealed: false })
+        )
+      });
+    } catch (error) {
+      console.error("Error fetching round info:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-black text-white">
@@ -31,45 +63,75 @@ function LandingPage({ Nav }) {
             Trade, hold, or sell based on partial number matches!
           </p>
           <div className="flex space-x-4">
-            <button className="bg-purple-600 hover:bg-purple-700 px-8 py-3 rounded-lg transition flex items-center space-x-2">
+            <Link 
+              to="/mint"
+              className="bg-purple-600 hover:bg-purple-700 px-8 py-3 rounded-lg transition flex items-center space-x-2"
+            >
               <Ticket className="h-5 w-5" />
               <span>Buy Tickets</span>
-            </button>
-            <button className="border border-purple-500 text-purple-500 hover:bg-purple-500 hover:text-white px-8 py-3 rounded-lg transition flex items-center space-x-2">
+            </Link>
+            <Link 
+              to="/marketplace"
+              className="border border-purple-500 text-purple-500 hover:bg-purple-500 hover:text-white px-8 py-3 rounded-lg transition flex items-center space-x-2"
+            >
               <Award className="h-5 w-5" />
-              <span>Learn More</span>
-            </button>
+              <span>Trade Tickets</span>
+            </Link>
           </div>
         </div>
 
         <div className="relative">
           <div className="bg-purple-800/30 rounded-2xl p-8 backdrop-blur-lg">
             <div className="text-center mb-4">
-              <h3 className="text-2xl font-semibold text-purple-200 mb-4">
-                Current Lottery Sequence
-              </h3>
-              <div className="flex justify-center space-x-4">
-                {lotteryNumbers.map((num, index) => (
-                  <div
-                    key={index}
-                    className={`
-                      w-16 h-24 flex items-center justify-center 
-                      text-4xl font-bold rounded-lg 
-                      ${
-                        num.revealed
-                          ? "bg-purple-600 text-white"
-                          : "bg-gray-800 text-gray-500 border-2 border-gray-700"
-                      }
-                      transition-all duration-300
-                    `}
-                  >
-                    {num.revealed ? num.value : "?"}
+              {loading ? (
+                <div className="animate-pulse space-y-4">
+                  <div className="h-8 bg-purple-800/50 rounded"></div>
+                  <div className="flex justify-center space-x-4">
+                    {[...Array(6)].map((_, i) => (
+                      <div key={i} className="w-16 h-24 bg-purple-800/50 rounded-lg"></div>
+                    ))}
                   </div>
-                ))}
-              </div>
-              <p className="mt-4 text-sm text-purple-300">
-                3 numbers revealed - Next reveal in 2 days
-              </p>
+                  <div className="h-6 bg-purple-800/50 rounded w-3/4 mx-auto"></div>
+                </div>
+              ) : roundInfo ? (
+                <>
+                  <h3 className="text-2xl font-semibold text-purple-200 mb-4">
+                    Round #{roundInfo.currentRound}
+                    <span className="block text-lg mt-1">
+                      Prize Pool: {parseFloat(roundInfo.prize).toFixed(4)} ETH
+                    </span>
+                  </h3>
+                  <div className="flex justify-center space-x-4">
+                    {roundInfo.numbers.map((num, index) => (
+                      <div
+                        key={index}
+                        className={`
+                          w-16 h-24 flex items-center justify-center 
+                          text-4xl font-bold rounded-lg 
+                          ${
+                            num.revealed
+                              ? "bg-purple-600 text-white"
+                              : "bg-gray-800 text-gray-500 border-2 border-gray-700"
+                          }
+                          transition-all duration-300
+                        `}
+                      >
+                        {num.revealed ? num.value : "?"}
+                      </div>
+                    ))}
+                  </div>
+                  <p className="mt-4 text-sm text-purple-300">
+                    {roundInfo.isComplete 
+                      ? "Round Complete - New round starting soon!" 
+                      : `${roundInfo.revealIndex}/6 numbers revealed - Next reveal: ${roundInfo.nextRevealTime.toLocaleString()}`
+                    }
+                  </p>
+                </>
+              ) : (
+                <div className="text-red-400 py-8">
+                  Failed to load lottery information. Please try again later.
+                </div>
+              )}
             </div>
           </div>
         </div>

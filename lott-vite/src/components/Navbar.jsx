@@ -49,17 +49,25 @@ const Navbar = () => {
             >
               My Tickets
             </Link> */}
+            
             <Link
-              to="/admin"
-              className={`font-medium transition-colors ${isActive('/admin') ? 'text-purple-400' : 'text-gray-300 hover:text-purple-300'}`}
+              to="/mint"
+              className={`font-medium transition-colors ${isActive('/dashboard') ? 'text-purple-400' : 'text-gray-300 hover:text-purple-300'}`}
             >
-              Admin
+              Buy
             </Link>
             <Link
               to="/marketplace"
               className={`font-medium transition-colors ${isActive('/dashboard') ? 'text-purple-400' : 'text-gray-300 hover:text-purple-300'}`}
             >
               Marketplace
+            </Link>
+
+            <Link
+              to="/admin"
+              className={`font-medium transition-colors ${isActive('/admin') ? 'text-purple-400' : 'text-gray-300 hover:text-purple-300'}`}
+            >
+              Admin
             </Link>
           </div>
 

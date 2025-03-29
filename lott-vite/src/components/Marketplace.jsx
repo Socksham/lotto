@@ -3,8 +3,9 @@ import { getContract } from "../utils/contract";
 import { useAddress } from "@thirdweb-dev/react";
 import { ethers } from "ethers";
 import { ShoppingBag, Tag, Ticket, Loader, Search, Filter } from "lucide-react";
+import Navbar from "./Navbar";
 
-const Marketplace = ({ Nav }) => {
+const Marketplace = () => {
   const [listings, setListings] = useState([]);
   const [ownedTickets, setOwnedTickets] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -26,14 +27,51 @@ const Marketplace = ({ Nav }) => {
   const fetchMarketplaceData = async () => {
     try {
       setLoading(true);
+      const contract = await getContract();
       
-      // Replace with your actual marketplace contract call
-      // For demo purposes, I'm creating mock data
-      const mockListings = generateMockListings();
-      const mockOwnedTickets = generateMockOwnedTickets();
+      // Fetch listed tickets
+      const listedTicketIds = await contract.getAllMarketplaceListings();
+      const listingsPromises = listedTicketIds.map(async (id) => {
+        const details = await contract.getTicketDetails(id);
+        const listing = await contract.getTicketListing(id);
+        
+        return {
+          id: id.toString(),
+          numbers: details.numbers.map(n => n.toNumber()),
+          price: ethers.utils.formatEther(listing.price),
+          seller: listing.seller,
+          status: details.status,
+          matchedSoFar: details.status.includes("Matched") 
+            ? parseInt(details.status) 
+            : 0
+        };
+      });
       
-      setListings(mockListings);
-      setOwnedTickets(mockOwnedTickets);
+      // Fetch owned tickets
+      const ownedTicketIds = await contract.getTicketsOfOwner(address);
+      const ownedPromises = ownedTicketIds.map(async (id) => {
+        const details = await contract.getTicketDetails(id);
+        const listing = await contract.getTicketListing(id);
+        
+        return {
+          id: id.toString(),
+          numbers: details.numbers.map(n => n.toNumber()),
+          isListed: listing.active,
+          price: listing.active ? ethers.utils.formatEther(listing.price) : null,
+          status: details.status,
+          matchedSoFar: details.status.includes("Matched") 
+            ? parseInt(details.status) 
+            : 0
+        };
+      });
+
+      const [fetchedListings, fetchedOwned] = await Promise.all([
+        Promise.all(listingsPromises),
+        Promise.all(ownedPromises)
+      ]);
+
+      setListings(fetchedListings);
+      setOwnedTickets(fetchedOwned);
     } catch (error) {
       console.error("Error fetching marketplace data:", error);
       setMessage("Failed to load marketplace data");
@@ -70,17 +108,17 @@ const Marketplace = ({ Nav }) => {
 
     try {
       setLoading(true);
-      // Mock function for now - in production connect to your marketplace contract
-      await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate transaction time
+      const contract = await getContract();
+      
+      // Convert ETH to Wei for contract
+      const priceInWei = ethers.utils.parseEther(listingPrice);
+      
+      const tx = await contract.listTicket(selectedTicketId, priceInWei);
+      setMessage("Listing your ticket...");
+      await tx.wait();
       
       setMessage("Successfully listed your ticket!");
-      // Update the UI to show the ticket is now listed
-      const updatedOwnedTickets = ownedTickets.map(ticket => 
-        ticket.id === selectedTicketId 
-          ? {...ticket, isListed: true, price: listingPrice} 
-          : ticket
-      );
-      setOwnedTickets(updatedOwnedTickets);
+      await fetchMarketplaceData(); // Refresh data
       
       // Reset form
       setSelectedTicketId(null);
@@ -96,17 +134,14 @@ const Marketplace = ({ Nav }) => {
   const cancelListing = async (ticketId) => {
     try {
       setLoading(true);
-      // Mock function for now - in production connect to your marketplace contract
-      await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate transaction time
+      const contract = await getContract();
+      
+      const tx = await contract.delistTicket(ticketId);
+      setMessage("Canceling your listing...");
+      await tx.wait();
       
       setMessage("Successfully canceled your listing!");
-      // Update the UI to show the ticket is no longer listed
-      const updatedOwnedTickets = ownedTickets.map(ticket => 
-        ticket.id === ticketId 
-          ? {...ticket, isListed: false, price: null} 
-          : ticket
-      );
-      setOwnedTickets(updatedOwnedTickets);
+      await fetchMarketplaceData(); // Refresh data
     } catch (error) {
       console.error("Error canceling listing:", error);
       setMessage(error.message || "Failed to cancel listing");
@@ -118,19 +153,19 @@ const Marketplace = ({ Nav }) => {
   const buyTicket = async (ticketId, price) => {
     try {
       setLoading(true);
-      // Mock function for now - in production connect to your marketplace contract
-      await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate transaction time
+      const contract = await getContract();
+      
+      // Convert ETH price to Wei
+      const priceInWei = ethers.utils.parseEther(price);
+      
+      const tx = await contract.buyTicket(ticketId, {
+        value: priceInWei
+      });
+      setMessage("Purchasing ticket...");
+      await tx.wait();
       
       setMessage("Successfully purchased ticket #" + ticketId + "!");
-      // Update the UI to remove the purchased ticket from listings
-      const updatedListings = listings.filter(listing => listing.id !== ticketId);
-      setListings(updatedListings);
-      
-      // Add to owned tickets
-      const purchasedTicket = listings.find(listing => listing.id === ticketId);
-      if (purchasedTicket) {
-        setOwnedTickets([...ownedTickets, {...purchasedTicket, isListed: false, price: null}]);
-      }
+      await fetchMarketplaceData(); // Refresh data
     } catch (error) {
       console.error("Error purchasing ticket:", error);
       setMessage(error.message || "Failed to purchase ticket");
@@ -183,8 +218,7 @@ const Marketplace = ({ Nav }) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-black text-white">
-      {/* Navigation */}
-      {Nav}
+      <Navbar />
 
       <div className="container mx-auto px-8 py-12">
         <div className="text-center mb-8">
