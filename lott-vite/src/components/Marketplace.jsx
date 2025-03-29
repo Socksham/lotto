@@ -105,22 +105,34 @@ const Marketplace = () => {
       setMessage("Please select a ticket and enter a price");
       return;
     }
-
+  
     try {
       setLoading(true);
       const contract = await getContract();
       
-      // Convert ETH to Wei for contract
       const priceInWei = ethers.utils.parseEther(listingPrice);
-      
-      const tx = await contract.listTicket(selectedTicketId, priceInWei);
+  
+      // Estimate gas
+      let estimatedGas;
+      try {
+        estimatedGas = await contract.estimateGas.listTicket(selectedTicketId, priceInWei);
+      } catch (error) {
+        console.error("Gas estimation failed:", error);
+        setMessage("Failed to estimate gas. Please try again.");
+        setLoading(false);
+        return;
+      }
+  
+      const tx = await contract.listTicket(selectedTicketId, priceInWei, {
+        gasLimit: estimatedGas.add(ethers.BigNumber.from(50000)), // Adding a buffer
+      });
+  
       setMessage("Listing your ticket...");
       await tx.wait();
-      
+  
       setMessage("Successfully listed your ticket!");
-      await fetchMarketplaceData(); // Refresh data
-      
-      // Reset form
+      await fetchMarketplaceData();
+  
       setSelectedTicketId(null);
       setListingPrice("");
     } catch (error) {
@@ -130,18 +142,32 @@ const Marketplace = () => {
       setLoading(false);
     }
   };
-
+  
   const cancelListing = async (ticketId) => {
     try {
       setLoading(true);
       const contract = await getContract();
-      
-      const tx = await contract.delistTicket(ticketId);
+  
+      // Estimate gas
+      let estimatedGas;
+      try {
+        estimatedGas = await contract.estimateGas.delistTicket(ticketId);
+      } catch (error) {
+        console.error("Gas estimation failed:", error);
+        setMessage("Failed to estimate gas. Please try again.");
+        setLoading(false);
+        return;
+      }
+  
+      const tx = await contract.delistTicket(ticketId, {
+        gasLimit: estimatedGas.add(ethers.BigNumber.from(50000)),
+      });
+  
       setMessage("Canceling your listing...");
       await tx.wait();
-      
+  
       setMessage("Successfully canceled your listing!");
-      await fetchMarketplaceData(); // Refresh data
+      await fetchMarketplaceData();
     } catch (error) {
       console.error("Error canceling listing:", error);
       setMessage(error.message || "Failed to cancel listing");
@@ -149,23 +175,37 @@ const Marketplace = () => {
       setLoading(false);
     }
   };
-
+  
   const buyTicket = async (ticketId, price) => {
     try {
       setLoading(true);
       const contract = await getContract();
-      
-      // Convert ETH price to Wei
+  
       const priceInWei = ethers.utils.parseEther(price);
-      
+  
+      // Estimate gas
+      let estimatedGas;
+      try {
+        estimatedGas = await contract.estimateGas.buyTicket(ticketId, {
+          value: priceInWei,
+        });
+      } catch (error) {
+        console.error("Gas estimation failed:", error);
+        setMessage("Failed to estimate gas. Please try again.");
+        setLoading(false);
+        return;
+      }
+  
       const tx = await contract.buyTicket(ticketId, {
-        value: priceInWei
+        value: priceInWei,
+        gasLimit: estimatedGas.add(ethers.BigNumber.from(50000)),
       });
+  
       setMessage("Purchasing ticket...");
       await tx.wait();
-      
+  
       setMessage("Successfully purchased ticket #" + ticketId + "!");
-      await fetchMarketplaceData(); // Refresh data
+      await fetchMarketplaceData();
     } catch (error) {
       console.error("Error purchasing ticket:", error);
       setMessage(error.message || "Failed to purchase ticket");
@@ -173,6 +213,82 @@ const Marketplace = () => {
       setLoading(false);
     }
   };
+  
+
+  // const listTicket = async (e) => {
+  //   e.preventDefault();
+  //   if (!selectedTicketId || !listingPrice) {
+  //     setMessage("Please select a ticket and enter a price");
+  //     return;
+  //   }
+
+  //   try {
+  //     setLoading(true);
+  //     const contract = await getContract();
+      
+  //     // Convert ETH to Wei for contract
+  //     const priceInWei = ethers.utils.parseEther(listingPrice);
+      
+  //     const tx = await contract.listTicket(selectedTicketId, priceInWei);
+  //     setMessage("Listing your ticket...");
+  //     await tx.wait();
+      
+  //     setMessage("Successfully listed your ticket!");
+  //     await fetchMarketplaceData(); // Refresh data
+      
+  //     // Reset form
+  //     setSelectedTicketId(null);
+  //     setListingPrice("");
+  //   } catch (error) {
+  //     console.error("Error listing ticket:", error);
+  //     setMessage(error.message || "Failed to list ticket");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+  // const cancelListing = async (ticketId) => {
+  //   try {
+  //     setLoading(true);
+  //     const contract = await getContract();
+      
+  //     const tx = await contract.delistTicket(ticketId);
+  //     setMessage("Canceling your listing...");
+  //     await tx.wait();
+      
+  //     setMessage("Successfully canceled your listing!");
+  //     await fetchMarketplaceData(); // Refresh data
+  //   } catch (error) {
+  //     console.error("Error canceling listing:", error);
+  //     setMessage(error.message || "Failed to cancel listing");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+  // const buyTicket = async (ticketId, price) => {
+  //   try {
+  //     setLoading(true);
+  //     const contract = await getContract();
+      
+  //     // Convert ETH price to Wei
+  //     const priceInWei = ethers.utils.parseEther(price);
+      
+  //     const tx = await contract.buyTicket(ticketId, {
+  //       value: priceInWei
+  //     });
+  //     setMessage("Purchasing ticket...");
+  //     await tx.wait();
+      
+  //     setMessage("Successfully purchased ticket #" + ticketId + "!");
+  //     await fetchMarketplaceData(); // Refresh data
+  //   } catch (error) {
+  //     console.error("Error purchasing ticket:", error);
+  //     setMessage(error.message || "Failed to purchase ticket");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   // Filter listings based on current filter state
   const filteredListings = listings.filter(listing => {
