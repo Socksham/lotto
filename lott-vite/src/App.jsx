@@ -6,6 +6,7 @@ import AdminPanel from "./components/AdminPanel";
 import LotteryStatusDashboard from "./components/Dashboard";
 import MyTickets from "./components/MyTickets";
 import MintTicket from "./components/MintTicket";
+import TradeTickets from "./components/TradeTickets";
 import ContractInteraction from "./components/ContractInteractions";
 import Navbar from "./components/Navbar";
 import { ThirdwebProvider as T5 } from "thirdweb/react";
@@ -29,6 +30,7 @@ function App() {
           <Route path="/dashboard" element={<LotteryStatusDashboard Nav={navComp}/>} />
           <Route path="/my-tickets" element={<MyTickets Nav={navComp}/>} />
           <Route path="/mint" element={<MintTicket Nav={navComp}/>} />
+          <Route path="/trade" element={<TradeTickets />}  />
           <Route path="/contract" element={<ContractInteraction Nav={navComp}/>} />
         </Routes>
       </T5>
