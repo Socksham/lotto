@@ -1,111 +1,3 @@
-// import { useState } from "react";
-// import { Link } from "react-router-dom";
-// import { Ticket } from "lucide-react";
-// import { ConnectWallet } from "@thirdweb-dev/react";
-
-// const Navbar = () => {
-//   const [isOpen, setIsOpen] = useState(false);
-
-//   return (
-//     <nav className="px-8 py-6">
-//         <div className="container mx-auto flex justify-between items-center">
-//           {/* Logo / Brand */}
-//           <div className="flex items-center space-x-4">
-//             <Ticket className="h-8 w-8 text-purple-500" />
-//             <Link to="/" className="text-2xl font-bold text-white">
-//               NumberDrop Lottery
-//             </Link>
-//           </div>
-
-//           {/* Desktop Menu */}
-//           <div className="hidden md:flex items-center space-x-6">
-//             <Link to="/" className="text-gray-300 hover:text-white transition">
-//               Home
-//             </Link>
-//             <Link
-//               to="/dashboard"
-//               className="text-gray-300 hover:text-white transition"
-//             >
-//               Dashboard
-//             </Link>
-//             <Link
-//               to="/my-tickets"
-//               className="text-gray-300 hover:text-white transition"
-//             >
-//               My Tickets
-//             </Link>
-//             <Link
-//               to="/admin"
-//               className="text-gray-300 hover:text-white transition"
-//             >
-//               Admin
-//             </Link>
-
-//             {/* Connect Button with Gradient Effect */}
-//             <div className="relative group">
-//               <div className="absolute -inset-0.5 bg-gradient-to-r from-pink-600 to-purple-600 rounded-lg blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200"></div>
-//               <div className="relative px-4 py-2 bg-black rounded-lg">
-//                 <span className="text-purple-400"><ConnectWallet
-//                             theme="dark"
-//                             btnTitle="Connect Wallet"
-//                           /></span>
-//               </div>
-//             </div>
-//           </div>
-
-//           {/* Mobile Menu Button */}
-//           <button
-//             className="md:hidden text-gray-300 focus:outline-none"
-//             onClick={() => setIsOpen(!isOpen)}
-//           >
-//             ☰
-//           </button>
-//         </div>
-
-//         {/* Mobile Menu */}
-//         {isOpen && (
-//           <div className="md:hidden mt-2 space-y-4 bg-black p-4 rounded-lg shadow-lg">
-//             <Link
-//               to="/"
-//               className="block text-gray-300 hover:text-white transition"
-//             >
-//               Home
-//             </Link>
-//             <Link
-//               to="/dashboard"
-//               className="block text-gray-300 hover:text-white transition"
-//             >
-//               Dashboard
-//             </Link>
-//             <Link
-//               to="/my-tickets"
-//               className="block text-gray-300 hover:text-white transition"
-//             >
-//               My Tickets
-//             </Link>
-//             <Link
-//               to="/admin"
-//               className="block text-gray-300 hover:text-white transition"
-//             >
-//               Admin
-//             </Link>
-
-//             {/* Mobile Connect Button */}
-//             <div className="relative group inline-block mt-2">
-//               <div className="absolute -inset-0.5 bg-gradient-to-r from-pink-600 to-purple-600 rounded-lg blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200"></div>
-//               <div className="relative px-4 py-2 bg-black rounded-lg">
-//                 <span className="text-purple-400">🚀 Connect</span>
-//               </div>
-//             </div>
-//           </div>
-//         )}
-//       </nav>
-//   );
-// };
-
-// export default Navbar;
-
-
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Ticket, Menu, X } from "lucide-react";
@@ -162,6 +54,12 @@ const Navbar = () => {
               className={`font-medium transition-colors ${isActive('/admin') ? 'text-purple-400' : 'text-gray-300 hover:text-purple-300'}`}
             >
               Admin
+            </Link>
+            <Link
+              to="/marketplace"
+              className={`font-medium transition-colors ${isActive('/dashboard') ? 'text-purple-400' : 'text-gray-300 hover:text-purple-300'}`}
+            >
+              Marketplace
             </Link>
           </div>
 

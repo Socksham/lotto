@@ -2,13 +2,14 @@
 pragma solidity ^0.8.17;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/Base64.sol";
 
-contract LotteryNFT is ERC721, Ownable, ReentrancyGuard {
+contract LotteryNFT is ERC721Enumerable, Ownable, ReentrancyGuard {
     using Strings for uint256;
     using Counters for Counters.Counter;
     
@@ -17,13 +18,22 @@ contract LotteryNFT is ERC721, Ownable, ReentrancyGuard {
         bool claimed;
     }
     
+    struct Listing {
+        address seller;
+        uint256 price;
+        bool active;
+    }
+    
     Counters.Counter private _tokenIds;
     uint256 public constant MINT_PRICE = 0.01 ether;
     uint256 public constant TRANSACTION_FEE = 250; // 2.5% in basis points
     uint256 public constant OWNER_FEE = 100; // 1% in basis points
+    uint256 public constant MARKETPLACE_FEE = 200; // 2% in basis points
     
     mapping(uint256 => Ticket) public tickets;
     mapping(uint256 => uint256) public revealedNumbers;
+    mapping(uint256 => Listing) public marketplaceListings;
+    
     uint256 public currentRound;
     uint256 public currentRevealIndex;
     uint256 public lastRevealTime;
@@ -36,6 +46,9 @@ contract LotteryNFT is ERC721, Ownable, ReentrancyGuard {
     event NumberRevealed(uint256 indexed round, uint256 number, uint256 indexed revealIndex);
     event PrizeAwarded(address indexed winner, uint256 amount);
     event NewRoundStarted(uint256 indexed round);
+    event TicketListed(uint256 indexed tokenId, address indexed seller, uint256 price);
+    event TicketDelisted(uint256 indexed tokenId, address indexed seller);
+    event TicketSold(uint256 indexed tokenId, address indexed seller, address indexed buyer, uint256 price);
     
     constructor() ERC721("LotteryNFT", "LOTTO") {}
     
@@ -202,7 +215,7 @@ contract LotteryNFT is ERC721, Ownable, ReentrancyGuard {
         
         // Using block difficulty and timestamp for randomness
         // Note: In production, consider using Chainlink VRF
-        uint256 number = uint256(keccak256(abi.encodePacked(block.prevrandao, block.timestamp))) % 49 + 1;
+        uint256 number = uint256(keccak256(abi.encodePacked(block.prevrandao, block.timestamp))) % 10;
         
         revealedNumbers[currentRevealIndex] = number;
         emit NumberRevealed(currentRound, number, currentRevealIndex);
@@ -251,20 +264,157 @@ contract LotteryNFT is ERC721, Ownable, ReentrancyGuard {
         emit NewRoundStarted(currentRound);
     }
     
-    function _beforeTokenTransfer(
-        address from,
-        address to,
-        uint256 tokenId
-    ) internal virtual {
-        super._beforeTokenTransfer(from, to, tokenId, 1); // Add batchSize argument
+    // Marketplace functions
+    function listTicket(uint256 tokenId, uint256 price) public {
+        require(ownerOf(tokenId) == msg.sender, "Not the owner");
+        require(price > 0, "Price must be greater than 0");
+        require(!marketplaceListings[tokenId].active, "Already listed");
         
-        if(from != address(0) && to != address(0)) {
-            uint256 fee = (msg.value * TRANSACTION_FEE) / 10000;
-            uint256 ownerFee = (msg.value * OWNER_FEE) / 10000;
-            
-            accumulatedPrize += fee;
-            payable(owner()).transfer(ownerFee);
+        // Approve the contract to transfer the NFT when sold
+        approve(address(this), tokenId);
+        
+        marketplaceListings[tokenId] = Listing(msg.sender, price, true);
+        
+        emit TicketListed(tokenId, msg.sender, price);
+    }
+    
+    function delistTicket(uint256 tokenId) public {
+        require(marketplaceListings[tokenId].seller == msg.sender, "Not the seller");
+        require(marketplaceListings[tokenId].active, "Not listed");
+        
+        delete marketplaceListings[tokenId];
+        
+        emit TicketDelisted(tokenId, msg.sender);
+    }
+    
+    function buyTicket(uint256 tokenId) public payable nonReentrant {
+        Listing memory listing = marketplaceListings[tokenId];
+        
+        require(listing.active, "Not listed for sale");
+        require(msg.value >= listing.price, "Insufficient payment");
+        require(msg.sender != listing.seller, "Cannot buy your own ticket");
+        
+        address seller = listing.seller;
+        uint256 price = listing.price;
+        
+        // Calculate fees
+        uint256 marketplaceFee = (price * MARKETPLACE_FEE) / 10000;
+        uint256 sellerAmount = price - marketplaceFee;
+        
+        // Distribute fees
+        payable(owner()).transfer(marketplaceFee);
+        payable(seller).transfer(sellerAmount);
+        
+        // Transfer the NFT
+        _transfer(seller, msg.sender, tokenId);
+        
+        // Delete the listing
+        delete marketplaceListings[tokenId];
+        
+        emit TicketSold(tokenId, seller, msg.sender, price);
+    }
+    
+    // View functions for marketplace
+    function getTicketListing(uint256 tokenId) public view returns (
+        address seller,
+        uint256 price,
+        bool active
+    ) {
+        Listing memory listing = marketplaceListings[tokenId];
+        return (listing.seller, listing.price, listing.active);
+    }
+    
+    function getAllMarketplaceListings() public view returns (uint256[] memory) {
+        uint256 totalSupply = totalSupply();
+        uint256 listingCount = 0;
+        
+        // Count active listings
+        for (uint256 i = 1; i <= totalSupply; i++) {
+            if (marketplaceListings[i].active) {
+                listingCount++;
+            }
         }
+        
+        // Create array of listing IDs
+        uint256[] memory listedTickets = new uint256[](listingCount);
+        uint256 currentIndex = 0;
+        
+        for (uint256 i = 1; i <= totalSupply; i++) {
+            if (marketplaceListings[i].active) {
+                listedTickets[currentIndex] = i;
+                currentIndex++;
+            }
+        }
+        
+        return listedTickets;
+    }
+    
+    // Functions to get user's tickets
+    function getTicketsOfOwner(address owner) public view returns (uint256[] memory) {
+        uint256 tokenCount = balanceOf(owner);
+        uint256[] memory tokensId = new uint256[](tokenCount);
+        
+        for (uint256 i = 0; i < tokenCount; i++) {
+            tokensId[i] = tokenOfOwnerByIndex(owner, i);
+        }
+        
+        return tokensId;
+    }
+    
+    function getTicketDetails(uint256 tokenId) public view returns (
+        uint256[6] memory numbers,
+        bool claimed,
+        string memory status,
+        bool isListed,
+        uint256 price
+    ) {
+        require(_exists(tokenId), "Token does not exist");
+        
+        Ticket memory ticket = tickets[tokenId];
+        Listing memory listing = marketplaceListings[tokenId];
+        
+        return (
+            ticket.numbers,
+            ticket.claimed,
+            getTicketStatus(tokenId),
+            listing.active,
+            listing.price
+        );
+    }
+    
+    function getMultipleTicketDetails(uint256[] memory tokenIds) public view returns (
+        uint256[][] memory numbers,
+        bool[] memory claimed,
+        string[] memory status,
+        bool[] memory isListed,
+        uint256[] memory prices
+    ) {
+        uint256 length = tokenIds.length;
+        numbers = new uint256[][](length);
+        claimed = new bool[](length);
+        status = new string[](length);
+        isListed = new bool[](length);
+        prices = new uint256[](length);
+        
+        for (uint256 i = 0; i < length; i++) {
+            if (_exists(tokenIds[i])) {
+                Ticket memory ticket = tickets[tokenIds[i]];
+                Listing memory listing = marketplaceListings[tokenIds[i]];
+                
+                uint256[] memory ticketNumbers = new uint256[](6);
+                for (uint256 j = 0; j < 6; j++) {
+                    ticketNumbers[j] = ticket.numbers[j];
+                }
+                
+                numbers[i] = ticketNumbers;
+                claimed[i] = ticket.claimed;
+                status[i] = getTicketStatus(tokenIds[i]);
+                isListed[i] = listing.active;
+                prices[i] = listing.price;
+            }
+        }
+        
+        return (numbers, claimed, status, isListed, prices);
     }
     
     // View functions for frontend
@@ -290,5 +440,9 @@ contract LotteryNFT is ERC721, Ownable, ReentrancyGuard {
             numbers[i] = revealedNumbers[i];
         }
         return numbers;
+    }
+    
+    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
+        return super.supportsInterface(interfaceId);
     }
 }
