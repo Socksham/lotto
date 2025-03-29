@@ -1,6 +1,7 @@
 import { Routes, Route, Link } from "react-router-dom";
 import { ThirdwebProvider } from "@thirdweb-dev/react";
 import WalletConnection from "./components/WalletConnection";
+import LandingPage from "./components/LandingPage";
 import AdminPanel from "./components/AdminPanel";
 import LotteryStatusDashboard from "./components/Dashboard";
 import MyTickets from "./components/MyTickets";
@@ -8,12 +9,9 @@ import MintTicket from "./components/MintTicket";
 import ContractInteraction from "./components/ContractInteractions";
 import Navbar from "./components/Navbar";
 import { ThirdwebProvider as T5 } from "thirdweb/react";
-import { motion } from "framer-motion";
-import React, { useState } from "react";
-import { Rocket, Ticket, Clock, Award } from "lucide-react";
+import React from "react";
 
 const amoyChainId = 80002;
-
 function App() {
   return (
     <ThirdwebProvider
@@ -22,9 +20,8 @@ function App() {
     >
       <T5>
         <Navbar />
-
         <Routes>
-          <Route path="/" element={<h1>Welcome to the App</h1>} />
+          <Route path="/" element={<LandingPage />} />
           <Route path="/wallet" element={<WalletConnection />} />
           <Route path="/admin" element={<AdminPanel />} />
           <Route path="/dashboard" element={<LotteryStatusDashboard />} />
@@ -37,4 +34,4 @@ function App() {
   );
 }
 
-export default App;
+export default App; 
