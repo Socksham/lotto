@@ -213,82 +213,6 @@ const Marketplace = () => {
       setLoading(false);
     }
   };
-  
-
-  // const listTicket = async (e) => {
-  //   e.preventDefault();
-  //   if (!selectedTicketId || !listingPrice) {
-  //     setMessage("Please select a ticket and enter a price");
-  //     return;
-  //   }
-
-  //   try {
-  //     setLoading(true);
-  //     const contract = await getContract();
-      
-  //     // Convert ETH to Wei for contract
-  //     const priceInWei = ethers.utils.parseEther(listingPrice);
-      
-  //     const tx = await contract.listTicket(selectedTicketId, priceInWei);
-  //     setMessage("Listing your ticket...");
-  //     await tx.wait();
-      
-  //     setMessage("Successfully listed your ticket!");
-  //     await fetchMarketplaceData(); // Refresh data
-      
-  //     // Reset form
-  //     setSelectedTicketId(null);
-  //     setListingPrice("");
-  //   } catch (error) {
-  //     console.error("Error listing ticket:", error);
-  //     setMessage(error.message || "Failed to list ticket");
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
-  // const cancelListing = async (ticketId) => {
-  //   try {
-  //     setLoading(true);
-  //     const contract = await getContract();
-      
-  //     const tx = await contract.delistTicket(ticketId);
-  //     setMessage("Canceling your listing...");
-  //     await tx.wait();
-      
-  //     setMessage("Successfully canceled your listing!");
-  //     await fetchMarketplaceData(); // Refresh data
-  //   } catch (error) {
-  //     console.error("Error canceling listing:", error);
-  //     setMessage(error.message || "Failed to cancel listing");
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
-  // const buyTicket = async (ticketId, price) => {
-  //   try {
-  //     setLoading(true);
-  //     const contract = await getContract();
-      
-  //     // Convert ETH price to Wei
-  //     const priceInWei = ethers.utils.parseEther(price);
-      
-  //     const tx = await contract.buyTicket(ticketId, {
-  //       value: priceInWei
-  //     });
-  //     setMessage("Purchasing ticket...");
-  //     await tx.wait();
-      
-  //     setMessage("Successfully purchased ticket #" + ticketId + "!");
-  //     await fetchMarketplaceData(); // Refresh data
-  //   } catch (error) {
-  //     console.error("Error purchasing ticket:", error);
-  //     setMessage(error.message || "Failed to purchase ticket");
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
 
   // Filter listings based on current filter state
   const filteredListings = listings.filter(listing => {
@@ -307,29 +231,6 @@ const Marketplace = () => {
       color: "text-blue-400 bg-blue-900/30 border-blue-700" 
     };
     return { label: status, color: "text-gray-400 bg-gray-900/30 border-gray-700" };
-  };
-
-  // Mock data generators
-  const generateMockListings = () => {
-    return Array.from({ length: 8 }, (_, i) => ({
-      id: 100 + i,
-      numbers: Array.from({ length: 6 }, () => Math.floor(Math.random() * 10)),
-      price: (0.01 + Math.random() * 0.04).toFixed(3),
-      seller: `0x${Math.random().toString(16).substring(2, 8)}...${Math.random().toString(16).substring(2, 8)}`,
-      status: Math.random() > 0.3 ? "Active" : "Invalid",
-      matchedSoFar: Math.floor(Math.random() * 3)
-    }));
-  };
-
-  const generateMockOwnedTickets = () => {
-    return Array.from({ length: 4 }, (_, i) => ({
-      id: 200 + i,
-      numbers: Array.from({ length: 6 }, () => Math.floor(Math.random() * 10)),
-      isListed: Math.random() > 0.5,
-      price: Math.random() > 0.5 ? (0.01 + Math.random() * 0.04).toFixed(3) : null,
-      status: Math.random() > 0.3 ? "Active" : "Invalid",
-      matchedSoFar: Math.floor(Math.random() * 3)
-    }));
   };
 
   return (
