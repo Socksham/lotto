@@ -124,7 +124,7 @@ const Marketplace = () => {
       }
   
       const tx = await contract.listTicket(selectedTicketId, priceInWei, {
-        gasLimit: estimatedGas.add(ethers.BigNumber.from(50000)), // Adding a buffer
+        gasLimit: estimatedGas.mul(2), // Adding a buffer
       });
   
       setMessage("Listing your ticket...");
@@ -160,7 +160,7 @@ const Marketplace = () => {
       }
   
       const tx = await contract.delistTicket(ticketId, {
-        gasLimit: estimatedGas.add(ethers.BigNumber.from(50000)),
+        gasLimit: estimatedGas.mul(2),
       });
   
       setMessage("Canceling your listing...");
@@ -198,7 +198,7 @@ const Marketplace = () => {
   
       const tx = await contract.buyTicket(ticketId, {
         value: priceInWei,
-        gasLimit: estimatedGas.add(ethers.BigNumber.from(50000)),
+        gasLimit: estimatedGas.mul(2),
       });
   
       setMessage("Purchasing ticket...");
