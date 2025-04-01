@@ -10,7 +10,6 @@ import TradeTickets from "./components/TradeTickets";
 import ContractInteraction from "./components/ContractInteractions";
 import Navbar from "./components/Navbar";
 import { ThirdwebProvider as T5 } from "thirdweb/react";
-import React from "react";
 import Marketplace from "./components/Marketplace";
 
 const amoyChainId = 80002;

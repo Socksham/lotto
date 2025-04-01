@@ -1,42 +1,52 @@
-import React, { useState, useEffect } from "react";
-import { Rocket, Ticket, Clock, Award } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Rocket, Ticket, Clock, Award, DollarSign } from "lucide-react";
 import { Link } from "react-router-dom";
-import Navbar from "./Navbar";
 import { getContract } from "../utils/contract";
 import { ethers } from "ethers";
+import LiveActivityFeed from "./LiveActivityFeed"; // Import the new component
 
 function LandingPage({ Nav }) {
   const [roundInfo, setRoundInfo] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [firstLoad, setFirstLoad] = useState(false);
 
   useEffect(() => {
     fetchRoundInfo();
     // Set up an interval to refresh data every minute
-    const interval = setInterval(fetchRoundInfo, 60000);
+    const interval = setInterval(fetchRoundInfo, 6000);
     return () => clearInterval(interval);
   }, []);
 
   const fetchRoundInfo = async () => {
     try {
-      setLoading(true);
+      if (firstLoad) {
+        setLoading(true);
+        setFirstLoad(false);
+      }
+
       const contract = await getContract();
-      
+
       // Get current round info and revealed numbers
       const info = await contract.getCurrentRoundInfo();
       const revealedNumbers = await contract.getRevealedNumbers();
-      
+
       setRoundInfo({
         currentRound: info.round.toNumber(),
         revealIndex: info.revealIndex.toNumber(),
         isComplete: info.isComplete,
         prize: ethers.utils.formatEther(info.prize),
         nextRevealTime: new Date(info.nextRevealTime.toNumber() * 1000),
-        numbers: revealedNumbers.map(n => ({
-          value: n.toNumber(),
-          revealed: true
-        })).concat(
-          Array(6 - revealedNumbers.length).fill({ value: null, revealed: false })
-        )
+        numbers: revealedNumbers
+          .map((n) => ({
+            value: n.toNumber(),
+            revealed: true,
+          }))
+          .concat(
+            Array(6 - revealedNumbers.length).fill({
+              value: null,
+              revealed: false,
+            })
+          ),
       });
     } catch (error) {
       console.error("Error fetching round info:", error);
@@ -63,14 +73,14 @@ function LandingPage({ Nav }) {
             Trade, hold, or sell based on partial number matches!
           </p>
           <div className="flex space-x-4">
-            <Link 
+            <Link
               to="/mint"
               className="bg-purple-600 hover:bg-purple-700 px-8 py-3 rounded-lg transition flex items-center space-x-2"
             >
               <Ticket className="h-5 w-5" />
               <span>Buy Tickets</span>
             </Link>
-            <Link 
+            <Link
               to="/marketplace"
               className="border border-purple-500 text-purple-500 hover:bg-purple-500 hover:text-white px-8 py-3 rounded-lg transition flex items-center space-x-2"
             >
@@ -88,7 +98,10 @@ function LandingPage({ Nav }) {
                   <div className="h-8 bg-purple-800/50 rounded"></div>
                   <div className="flex justify-center space-x-4">
                     {[...Array(6)].map((_, i) => (
-                      <div key={i} className="w-16 h-24 bg-purple-800/50 rounded-lg"></div>
+                      <div
+                        key={i}
+                        className="w-16 h-24 bg-purple-800/50 rounded-lg"
+                      ></div>
                     ))}
                   </div>
                   <div className="h-6 bg-purple-800/50 rounded w-3/4 mx-auto"></div>
@@ -121,10 +134,11 @@ function LandingPage({ Nav }) {
                     ))}
                   </div>
                   <p className="mt-4 text-sm text-purple-300">
-                    {roundInfo.isComplete 
-                      ? "Round Complete - New round starting soon!" 
-                      : `${roundInfo.revealIndex}/6 numbers revealed - Next reveal: ${roundInfo.nextRevealTime.toLocaleString()}`
-                    }
+                    {roundInfo.isComplete
+                      ? "Round Complete - New round starting soon!"
+                      : `${
+                          roundInfo.revealIndex
+                        }/6 numbers revealed - Next reveal: ${roundInfo.nextRevealTime.toLocaleString()}`}
                   </p>
                 </>
               ) : (
@@ -132,6 +146,75 @@ function LandingPage({ Nav }) {
                   Failed to load lottery information. Please try again later.
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Live Activity Section - NEW */}
+      <div className="container mx-auto px-8 py-12">
+        <div className="grid md:grid-cols-3 gap-8">
+          <div className="md:col-span-2">
+            <div className="text-left mb-8">
+              <h3 className="text-3xl font-bold mb-2">Live Network Activity</h3>
+              <p className="text-gray-400">
+                Watch in real-time as players mint, list, and trade lottery
+                tickets
+              </p>
+            </div>
+            <LiveActivityFeed />
+          </div>
+
+          <div>
+            <div className="text-left mb-8">
+              <h3 className="text-3xl font-bold mb-2">Why Join Now?</h3>
+              <p className="text-gray-400">
+                The earlier you participate, the more opportunities you'll have
+              </p>
+            </div>
+            <div className="bg-black/30 rounded-xl p-6 text-white">
+              <div className="space-y-6">
+                <div className="flex items-start space-x-4">
+                  <div className="bg-purple-900/50 p-3 rounded-lg">
+                    <Ticket className="h-6 w-6 text-purple-400" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-lg mb-1">Early Access</h4>
+                    <p className="text-gray-400 text-sm">
+                      Get your preferred number combinations before they're
+                      taken
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start space-x-4">
+                  <div className="bg-purple-900/50 p-3 rounded-lg">
+                    <DollarSign className="h-6 w-6 text-purple-400" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-lg mb-1">
+                      Trading Opportunity
+                    </h4>
+                    <p className="text-gray-400 text-sm">
+                      Buy low, sell high as the winning numbers are revealed
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start space-x-4">
+                  <div className="bg-purple-900/50 p-3 rounded-lg">
+                    <Award className="h-6 w-6 text-purple-400" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-lg mb-1">
+                      Growing Prize Pool
+                    </h4>
+                    <p className="text-gray-400 text-sm">
+                      The prize pool increases with every ticket minted
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
