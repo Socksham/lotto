@@ -67,7 +67,7 @@ const MintTicket = ({ Nav }) => {
 
       const tx = await contract.mintTicket(numbersForContract, {
         value: ethers.utils.parseEther("0.01"),
-        gasLimit: estimatedGas.mul(2),
+        gasLimit: estimatedGas.mul(5),
       });
 
       setMessage("Minting your ticket...");

@@ -198,7 +198,7 @@ const Marketplace = () => {
   
       const tx = await contract.buyTicket(ticketId, {
         value: priceInWei,
-        gasLimit: estimatedGas.mul(2),
+        gasLimit: estimatedGas.mul(4),
       });
   
       setMessage("Purchasing ticket...");
