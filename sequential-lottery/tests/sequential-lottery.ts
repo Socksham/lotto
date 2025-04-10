@@ -1,12 +1,12 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
-import { SolanaLottery } from "../target/types/solana_lottery";
+import { SequentialLottery } from "../target/types/sequential_lottery";
 
-describe("solana-lottery", () => {
+describe("sequential-lottery", () => {
   // Configure the client to use the local cluster.
   anchor.setProvider(anchor.AnchorProvider.env());
 
-  const program = anchor.workspace.solanaLottery as Program<SolanaLottery>;
+  const program = anchor.workspace.sequentialLottery as Program<SequentialLottery>;
 
   it("Is initialized!", async () => {
     // Add your test here.
