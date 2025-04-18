@@ -263,7 +263,8 @@ pub struct Lottery {
     pub bump: u8,
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Clone)]
+// #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
+#[account]
 pub struct MarketplaceListing {
     pub ticket_id: u64,
     pub seller: Pubkey,

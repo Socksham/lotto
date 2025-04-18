@@ -1,6 +1,7 @@
 import { Connection, PublicKey, clusterApiUrl } from '@solana/web3.js';
-import { Program, AnchorProvider, web3, utils, BN } from '@project-serum/anchor';
-import idl from '../idl/sequential_lottery.json'; // You'll need to export this from your Anchor program
+import { Program, AnchorProvider, web3, BN } from "@coral-xyz/anchor"
+
+import idl from '../idl/idl.json'; // You'll need to export this from your Anchor program
 
 // Set up program ID from the contract
 const programId = new PublicKey('422dg28A2Z3zS5DrpdXQKKrpxrMayZWkpbgWT6Yb64xx');
@@ -32,10 +33,12 @@ export const getProgram = (wallet) => {
   console.log(programId)
   console.log(provider)
   console.log('IDL types:', idl.types); // check for missing or malformed type definitions
+  console.log(idl.types);
+  console.log(idl.accounts);
   console.log(idl.types.find(t => t.name === 'Ticket'));
   console.log(idl.accounts.find(a => a.name === 'Ticket'));
 
-  const program = new Program(idl, programId, provider);
+  const program = new Program(idl, provider);
 
   console.log(program)
 
