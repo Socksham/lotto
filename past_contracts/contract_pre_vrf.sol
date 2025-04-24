@@ -8,11 +8,8 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/Base64.sol";
-import "@chainlink/contracts/src/v0.8/vrf/dev/VRFConsumerBaseV2Plus.sol";
-import "@chainlink/contracts/src/v0.8/vrf/dev/libraries/VRFV2PlusClient.sol";
 
-// Remove ConfirmedOwnerWithProposal from the inheritance chain to avoid conflicts
-contract LotteryV2 is ERC721Enumerable, ReentrancyGuard, VRFConsumerBaseV2Plus {
+contract LotteryV2 is ERC721Enumerable, Ownable, ReentrancyGuard {
     using Strings for uint256;
     using Counters for Counters.Counter;
 
@@ -27,16 +24,6 @@ contract LotteryV2 is ERC721Enumerable, ReentrancyGuard, VRFConsumerBaseV2Plus {
         bool active;
     }
 
-    // Chainlink VRF Variables
-    uint256 private immutable i_subscriptionId;
-    bytes32 private immutable i_gasLane;
-    uint32 private immutable i_callbackGasLimit;
-    uint16 private constant REQUEST_CONFIRMATIONS = 3;
-    uint32 private constant NUM_WORDS = 1;
-    
-    // Mapping from requestId to round reveal index
-    mapping(uint256 => uint256) private s_requestIdToRevealIndex;
-    
     Counters.Counter private _tokenIds;
     uint256 public constant MINT_PRICE = 0.01 ether;
     uint256 public constant TRANSACTION_FEE = 250; // 2.5% in basis points
@@ -51,11 +38,10 @@ contract LotteryV2 is ERC721Enumerable, ReentrancyGuard, VRFConsumerBaseV2Plus {
     uint256 public currentRound;
     uint256 public currentRevealIndex;
     uint256 public lastRevealTime;
-    uint256 public constant REVEAL_INTERVAL = 15 seconds;
+    uint256 public constant REVEAL_INTERVAL = 2 days;
 
     uint256 public accumulatedPrize;
     bool public roundComplete;
-    bool private randomnessRequested;
 
     event TicketMinted(
         uint256 indexed tokenId,
@@ -81,24 +67,13 @@ contract LotteryV2 is ERC721Enumerable, ReentrancyGuard, VRFConsumerBaseV2Plus {
         address indexed buyer,
         uint256 price
     );
-    event RandomnessRequested(uint256 indexed requestId, uint256 indexed revealIndex);
 
-    constructor(
-        address vrfCoordinatorV2Plus,
-        uint256 subscriptionId,
-        bytes32 gasLane, // keyHash
-        uint32 callbackGasLimit
-    ) ERC721("LotteryNFT", "LOTTO") VRFConsumerBaseV2Plus(vrfCoordinatorV2Plus) {
-        i_subscriptionId = subscriptionId;
-        i_gasLane = gasLane;
-        i_callbackGasLimit = callbackGasLimit;
-        randomnessRequested = false;
-    }
+    constructor() ERC721("LotteryNFT", "LOTTO") {}
 
     function mintTicket(uint256[6] memory numbers) public payable nonReentrant {
         require(msg.value >= MINT_PRICE, "Insufficient payment");
 
-        // Validate numbers (0-99 range)
+        // Validate numbers (0-9 range)
         for (uint i = 0; i < 6; i++) {
             require(
                 numbers[i] >= 0 && numbers[i] <= 99,
@@ -132,57 +107,6 @@ contract LotteryV2 is ERC721Enumerable, ReentrancyGuard, VRFConsumerBaseV2Plus {
         tickets[newTokenId] = Ticket(numbers, false);
 
         emit TicketMinted(newTokenId, msg.sender, numbers);
-    }
-
-    function revealNumber() public onlyOwner {
-        require(!roundComplete, "Start new round first");
-        require(
-            block.timestamp >= lastRevealTime + REVEAL_INTERVAL,
-            "Too early for next reveal"
-        );
-        require(!randomnessRequested, "Randomness already requested");
-
-        // Updated request format for VRF V2.5
-        uint256 requestId = s_vrfCoordinator.requestRandomWords(
-            VRFV2PlusClient.RandomWordsRequest({
-                keyHash: i_gasLane,
-                subId: i_subscriptionId,
-                requestConfirmations: REQUEST_CONFIRMATIONS,
-                callbackGasLimit: i_callbackGasLimit,
-                numWords: NUM_WORDS,
-                extraArgs: VRFV2PlusClient._argsToBytes(
-                    VRFV2PlusClient.ExtraArgsV1({nativePayment: false})
-                )
-            })
-        );
-
-        s_requestIdToRevealIndex[requestId] = currentRevealIndex;
-        randomnessRequested = true;
-        
-        emit RandomnessRequested(requestId, currentRevealIndex);
-        
-        lastRevealTime = block.timestamp;
-    }
-    
-    // Fix the data location issue in fulfillRandomWords - change memory to calldata
-    function fulfillRandomWords(
-        uint256 requestId,
-        uint256[] calldata randomWords
-    ) internal override {
-        uint256 revealIndex = s_requestIdToRevealIndex[requestId];
-        
-        // Generate a number between 0 and 99 using the random value
-        uint256 number = randomWords[0] % 100;
-        
-        revealedNumbers[revealIndex] = number;
-        emit NumberRevealed(currentRound, number, revealIndex);
-        
-        currentRevealIndex++;
-        randomnessRequested = false;
-        
-        if (currentRevealIndex == 6) {
-            roundComplete = true;
-        }
     }
 
     function tokenURI(
@@ -377,6 +301,30 @@ contract LotteryV2 is ERC721Enumerable, ReentrancyGuard, VRFConsumerBaseV2Plus {
         return "#3b82f6"; // Default blue
     }
 
+    function revealNumber() public onlyOwner {
+        require(!roundComplete, "Start new round first");
+        require(
+            block.timestamp >= lastRevealTime + REVEAL_INTERVAL,
+            "Too early for next reveal"
+        );
+
+        // Using block difficulty and timestamp for randomness
+        // Note: In production, consider using Chainlink VRF
+        uint256 number = uint256(
+            keccak256(abi.encodePacked(block.prevrandao, block.timestamp))
+        ) % 10;
+
+        revealedNumbers[currentRevealIndex] = number;
+        emit NumberRevealed(currentRound, number, currentRevealIndex);
+
+        currentRevealIndex++;
+        lastRevealTime = block.timestamp;
+
+        if (currentRevealIndex == 6) {
+            roundComplete = true;
+        }
+    }
+
     function claimPrize(uint256 tokenId) public nonReentrant {
         require(roundComplete, "Round not complete");
         require(ownerOf(tokenId) == msg.sender, "Not token owner");
@@ -404,7 +352,6 @@ contract LotteryV2 is ERC721Enumerable, ReentrancyGuard, VRFConsumerBaseV2Plus {
 
     function startNewRound() public onlyOwner {
         require(roundComplete, "Current round not complete");
-        require(!randomnessRequested, "Waiting for randomness to be fulfilled");
 
         currentRound++;
         currentRevealIndex = 0;
@@ -597,8 +544,7 @@ contract LotteryV2 is ERC721Enumerable, ReentrancyGuard, VRFConsumerBaseV2Plus {
             uint256 revealIndex,
             bool isComplete,
             uint256 prize,
-            uint256 nextRevealTime,
-            bool waitingForRandomness
+            uint256 nextRevealTime
         )
     {
         return (
@@ -606,8 +552,7 @@ contract LotteryV2 is ERC721Enumerable, ReentrancyGuard, VRFConsumerBaseV2Plus {
             currentRevealIndex,
             roundComplete,
             accumulatedPrize,
-            lastRevealTime + REVEAL_INTERVAL,
-            randomnessRequested
+            lastRevealTime + REVEAL_INTERVAL
         );
     }
 
