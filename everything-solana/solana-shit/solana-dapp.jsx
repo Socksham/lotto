@@ -28,7 +28,7 @@ import { IDL } from '../idl/lottery_v2'; // Generated IDL from Anchor
 import { PublicKey } from '@solana/web3.js';
 import { Program } from '@project-serum/anchor';
 
-export const PROGRAM_ID = new PublicKey('Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS'); // Your program ID
+export const PROGRAM_ID = new PublicKey('422dg28A2Z3zS5DrpdXQKKrpxrMayZWkpbgWT6Yb64xx'); // Your program ID
 
 export const getLotteryProgram = (provider) => {
   return new Program(IDL, PROGRAM_ID, provider);

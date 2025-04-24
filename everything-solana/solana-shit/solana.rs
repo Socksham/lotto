@@ -6,7 +6,7 @@ use mpl_token_metadata::state::{DataV2, Collection, Creator, Uses};
 use mpl_token_metadata::ID as MetadataID;
 use std::str::FromStr;
 
-declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"); // Replace with your program ID
+declare_id!("3UJcW6qB7LJJGdJbRqDh4SkWDVGCF15YzkuRtf5nvRJJ");
 
 #[program]
 pub mod lottery_v2 {
