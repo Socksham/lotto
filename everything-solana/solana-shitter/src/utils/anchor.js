@@ -1,7 +1,26 @@
-import { Connection, PublicKey, clusterApiUrl } from '@solana/web3.js';
+import * as buffer from "buffer";
+window.Buffer = buffer.Buffer;
+
+import { Connection, PublicKey, clusterApiUrl, Keypair } from '@solana/web3.js';
 import { Program, AnchorProvider, web3, BN } from "@coral-xyz/anchor"
+import {
+  PROGRAM_ID as TOKEN_METADATA_PROGRAM_ID,
+  findMetadataPda,
+  findMasterEditionPda,
+} from "@metaplex-foundation/mpl-token-metadata";
+import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { ASSOCIATED_TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { getAssociatedTokenAddress } from "@solana/spl-token";
+
+import {
+  createUmi
+} from '@metaplex-foundation/umi';
+import { mplTokenMetadata } from '@metaplex-foundation/mpl-token-metadata';
 
 import idl from '../idl/idl.json'; // You'll need to export this from your Anchor program
+
+const umi = createUmi('https://api.devnet.solana.com') // or use your own connection
+  .use(mplTokenMetadata());
 
 // Set up program ID from the contract
 const programId = new PublicKey('422dg28A2Z3zS5DrpdXQKKrpxrMayZWkpbgWT6Yb64xx');
@@ -24,8 +43,8 @@ export const getProgram = (wallet) => {
   const connection = new Connection(network, 'confirmed');
 
   const provider = new AnchorProvider(
-    connection, 
-    wallet, 
+    connection,
+    wallet,
     { commitment: 'confirmed' }
   );
 
@@ -59,7 +78,7 @@ export const initializeLottery = async (wallet) => {
         systemProgram: web3.SystemProgram.programId,
       })
       .rpc();
-    
+
     return tx;
   } catch (error) {
     console.error("Error initializing lottery:", error);
@@ -68,13 +87,85 @@ export const initializeLottery = async (wallet) => {
 };
 
 // Mint a ticket
-export const mintTicket = async (wallet, numbers) => {
+
+export const mintTicket = async (wallet) => {
   const { program, connection } = getProgram(wallet);
+  const user = program.provider.wallet.publicKey;
+
+  const [lotteryPDA] = await PublicKey.findProgramAddressSync(
+    [Buffer.from("lottery")], // adjust seeds if needed
+    program.programId
+  );
+
+  const [ticketPDA] = PublicKey.findProgramAddressSync(
+    [Buffer.from("ticket"), wallet.publicKey.toBuffer()],
+    program.programId
+  );
+
+  const mint = web3.Keypair.generate();
+
+  const pkey = mint.publicKey;
+  const skey = mint.secretKey;
+
+  console.log("mint:", mint);
+  console.log("pkey:", pkey?.toBase58());
+  console.log("is pkey a PublicKey?", pkey instanceof web3.PublicKey);
+
+  const tokenAccount = await getAssociatedTokenAddress(
+    pkey,
+    wallet.publicKey
+  );
+
+  console.log(program.account)
+
+  
+
+  const metadataAccount = findMetadataPda(umi, {mint: pkey});
+  const masterEdition = findMasterEditionPda(umi, {mint: pkey});
+
+  const lotteryState = await program.account.lotteryState.fetch(lotteryPDA);
+  const authority = lotteryState.authority;
+
+  await program.methods
+  .mintTicket([1, 2, 3, 4, 5, 6])
+  .accounts({
+    lotteryState: lotteryPDA,
+    ticketAccount: ticketPDA,
+    payment: wallet.publicKey,
+    authority: authority,
+    mint: mint.publicKey,
+    tokenAccount: tokenAccount,
+    metadataAccount: metadataAccount[0],
+    masterEdition: masterEdition[0],
+    systemProgram: web3.SystemProgram.programId,
+    tokenProgram: TOKEN_PROGRAM_ID,
+    associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+    rent: web3.SYSVAR_RENT_PUBKEY,
+    metadataProgram: TOKEN_METADATA_PROGRAM_ID,
+  })
+  .signers([mint]) // include the mint keypair here!
+  .rpc();
+
+
+  // await program.methods
+  //   .mintTicket([1, 2, 3, 4, 5, 6]) // replace with user input
+  //   .accounts({
+  //     lottery: lotteryPDA,
+  //     user: wallet.publicKey,
+  //     systemProgram: web3.SystemProgram.programId,
+  //     slotHashes: slotHashesAddress,
+  //   })
+  //   .rpc();
+};
+
+export const mintTicket2 = async (wallet, numbers) => {
+  const { program, connection } = getProgram(wallet);
+  console.log(program)
   const lotteryPDA = getLotteryPDA();
 
   try {
     // Get SlotHashes account address
-    const slotHashesAddress = new PublicKey('SysvarS1otHashes111111111111111111111111111');
+    const slotHashesAddress = web3.SYSVAR_SLOT_HASHES_PUBKEY;
 
     const tx = await program.methods
       .mintTicket(numbers)
@@ -248,7 +339,7 @@ export const getUserTickets = async (wallet) => {
 
   try {
     const lotteryState = await program.account.lottery.fetch(lotteryPDA);
-    
+
     // Filter tickets owned by the current user
     const userTickets = lotteryState.tickets.map((ticket, index) => {
       if (ticket.owner.toBase58() === wallet.publicKey.toBase58()) {
@@ -276,7 +367,7 @@ export const getMarketplaceListings = async (wallet) => {
 
   try {
     const lotteryState = await program.account.lottery.fetch(lotteryPDA);
-    
+
     // Get active listings
     const listings = lotteryState.marketplaceListings
       .filter(listing => listing.active)

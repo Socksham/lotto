@@ -82,7 +82,7 @@ const AdminPanel = ({ Nav }) => {
   
       console.log("Calling revealNumber...");
       const tx = await contract.revealNumber({
-        gasLimit: estimatedGas.mul(2), // Double for buffer
+        gasLimit: estimatedGas.mul(20), // Double for buffer
       });
   
       setMessage("Revealing number...");

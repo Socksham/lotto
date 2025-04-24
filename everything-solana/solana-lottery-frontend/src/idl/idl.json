@@ -1,0 +1,710 @@
+{
+    "address": "422dg28A2Z3zS5DrpdXQKKrpxrMayZWkpbgWT6Yb64xx",
+    "metadata": {
+      "name": "sequential_lottery",
+      "version": "0.1.0",
+      "spec": "0.1.0",
+      "description": "Created with Anchor"
+    },
+    "instructions": [
+      {
+        "name": "buy_ticket",
+        "discriminator": [
+          11,
+          24,
+          17,
+          193,
+          168,
+          116,
+          164,
+          169
+        ],
+        "accounts": [
+          {
+            "name": "lottery",
+            "writable": true
+          },
+          {
+            "name": "user",
+            "writable": true,
+            "signer": true
+          },
+          {
+            "name": "seller",
+            "writable": true
+          },
+          {
+            "name": "marketplace",
+            "writable": true
+          }
+        ],
+        "args": [
+          {
+            "name": "ticket_id",
+            "type": "u64"
+          }
+        ]
+      },
+      {
+        "name": "claim_prize",
+        "discriminator": [
+          157,
+          233,
+          139,
+          121,
+          246,
+          62,
+          234,
+          235
+        ],
+        "accounts": [
+          {
+            "name": "lottery",
+            "writable": true
+          },
+          {
+            "name": "user",
+            "writable": true,
+            "signer": true
+          }
+        ],
+        "args": [
+          {
+            "name": "ticket_id",
+            "type": "u64"
+          }
+        ]
+      },
+      {
+        "name": "delist_ticket",
+        "discriminator": [
+          151,
+          225,
+          116,
+          144,
+          187,
+          23,
+          171,
+          253
+        ],
+        "accounts": [
+          {
+            "name": "lottery",
+            "writable": true
+          },
+          {
+            "name": "user",
+            "writable": true,
+            "signer": true
+          }
+        ],
+        "args": [
+          {
+            "name": "ticket_id",
+            "type": "u64"
+          }
+        ]
+      },
+      {
+        "name": "initialize",
+        "discriminator": [
+          175,
+          175,
+          109,
+          31,
+          13,
+          152,
+          155,
+          237
+        ],
+        "accounts": [
+          {
+            "name": "lottery",
+            "writable": true,
+            "pda": {
+              "seeds": [
+                {
+                  "kind": "const",
+                  "value": [
+                    108,
+                    111,
+                    116,
+                    116,
+                    101,
+                    114,
+                    121
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name": "user",
+            "writable": true,
+            "signer": true
+          },
+          {
+            "name": "system_program",
+            "address": "11111111111111111111111111111111"
+          }
+        ],
+        "args": []
+      },
+      {
+        "name": "list_ticket",
+        "discriminator": [
+          11,
+          213,
+          240,
+          45,
+          246,
+          35,
+          44,
+          162
+        ],
+        "accounts": [
+          {
+            "name": "lottery",
+            "writable": true
+          },
+          {
+            "name": "user",
+            "writable": true,
+            "signer": true
+          }
+        ],
+        "args": [
+          {
+            "name": "ticket_id",
+            "type": "u64"
+          },
+          {
+            "name": "price",
+            "type": "u64"
+          }
+        ]
+      },
+      {
+        "name": "mint_ticket",
+        "discriminator": [
+          159,
+          167,
+          223,
+          60,
+          138,
+          6,
+          23,
+          29
+        ],
+        "accounts": [
+          {
+            "name": "lottery",
+            "writable": true
+          },
+          {
+            "name": "user",
+            "writable": true,
+            "signer": true
+          },
+          {
+            "name": "system_program",
+            "address": "11111111111111111111111111111111"
+          },
+          {
+            "name": "slot_hashes"
+          }
+        ],
+        "args": [
+          {
+            "name": "numbers",
+            "type": {
+              "array": [
+                "u8",
+                6
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "reveal_number",
+        "discriminator": [
+          27,
+          157,
+          191,
+          68,
+          80,
+          131,
+          207,
+          154
+        ],
+        "accounts": [
+          {
+            "name": "lottery",
+            "writable": true
+          },
+          {
+            "name": "admin",
+            "signer": true
+          },
+          {
+            "name": "slot_hashes"
+          }
+        ],
+        "args": []
+      },
+      {
+        "name": "start_new_round",
+        "discriminator": [
+          180,
+          48,
+          50,
+          160,
+          186,
+          163,
+          79,
+          185
+        ],
+        "accounts": [
+          {
+            "name": "lottery",
+            "writable": true
+          },
+          {
+            "name": "admin",
+            "signer": true
+          }
+        ],
+        "args": []
+      }
+    ],
+    "accounts": [
+      {
+        "name": "Lottery",
+        "discriminator": [
+          162,
+          182,
+          26,
+          12,
+          164,
+          214,
+          112,
+          3
+        ]
+      }
+    ],
+    "events": [
+      {
+        "name": "NewRoundStarted",
+        "discriminator": [
+          221,
+          75,
+          46,
+          241,
+          212,
+          127,
+          1,
+          184
+        ]
+      },
+      {
+        "name": "NumberRevealed",
+        "discriminator": [
+          175,
+          43,
+          226,
+          184,
+          21,
+          79,
+          231,
+          56
+        ]
+      },
+      {
+        "name": "PrizeAwarded",
+        "discriminator": [
+          156,
+          69,
+          186,
+          234,
+          187,
+          246,
+          27,
+          89
+        ]
+      },
+      {
+        "name": "TicketDelisted",
+        "discriminator": [
+          197,
+          42,
+          58,
+          29,
+          147,
+          199,
+          69,
+          184
+        ]
+      },
+      {
+        "name": "TicketListed",
+        "discriminator": [
+          104,
+          201,
+          254,
+          122,
+          120,
+          162,
+          118,
+          153
+        ]
+      },
+      {
+        "name": "TicketMinted",
+        "discriminator": [
+          22,
+          17,
+          212,
+          38,
+          91,
+          144,
+          104,
+          109
+        ]
+      },
+      {
+        "name": "TicketSold",
+        "discriminator": [
+          201,
+          47,
+          13,
+          10,
+          92,
+          172,
+          222,
+          219
+        ]
+      }
+    ],
+    "errors": [
+      {
+        "code": 6000,
+        "name": "InvalidNumberRange",
+        "msg": "Invalid number range, must be between 0 and 99"
+      },
+      {
+        "code": 6001,
+        "name": "DuplicateSequence",
+        "msg": "This number sequence already exists"
+      },
+      {
+        "code": 6002,
+        "name": "RoundComplete",
+        "msg": "Round is complete"
+      },
+      {
+        "code": 6003,
+        "name": "TooEarlyForReveal",
+        "msg": "Too early for next reveal"
+      },
+      {
+        "code": 6004,
+        "name": "RoundNotComplete",
+        "msg": "Round not complete"
+      },
+      {
+        "code": 6005,
+        "name": "PrizeAlreadyClaimed",
+        "msg": "Prize already claimed"
+      },
+      {
+        "code": 6006,
+        "name": "NotTicketOwner",
+        "msg": "Not ticket owner"
+      },
+      {
+        "code": 6007,
+        "name": "NotWinningTicket",
+        "msg": "Ticket numbers don't match"
+      },
+      {
+        "code": 6008,
+        "name": "InvalidTicketId",
+        "msg": "Invalid ticket ID"
+      },
+      {
+        "code": 6009,
+        "name": "InvalidPrice",
+        "msg": "Price must be greater than 0"
+      },
+      {
+        "code": 6010,
+        "name": "TicketNotListed",
+        "msg": "Ticket not listed"
+      },
+      {
+        "code": 6011,
+        "name": "InsufficientFunds",
+        "msg": "Insufficient funds"
+      },
+      {
+        "code": 6012,
+        "name": "CannotBuyOwnTicket",
+        "msg": "Cannot buy your own ticket"
+      },
+      {
+        "code": 6013,
+        "name": "NotSeller",
+        "msg": "Not the seller"
+      }
+    ],
+    "types": [
+      {
+        "name": "Lottery",
+        "type": {
+          "kind": "struct",
+          "fields": [
+            {
+              "name": "current_round",
+              "type": "u64"
+            },
+            {
+              "name": "current_reveal_index",
+              "type": "u8"
+            },
+            {
+              "name": "last_reveal_time",
+              "type": "i64"
+            },
+            {
+              "name": "accumulated_prize",
+              "type": "u64"
+            },
+            {
+              "name": "round_complete",
+              "type": "bool"
+            },
+            {
+              "name": "tickets",
+              "type": {
+                "vec": {
+                  "defined": {
+                    "name": "Ticket"
+                  }
+                }
+              }
+            },
+            {
+              "name": "revealed_numbers",
+              "type": {
+                "array": [
+                  "u8",
+                  6
+                ]
+              }
+            },
+            {
+              "name": "marketplace_listings",
+              "type": {
+                "vec": {
+                  "defined": {
+                    "name": "MarketplaceListing"
+                  }
+                }
+              }
+            },
+            {
+              "name": "bump",
+              "type": "u8"
+            }
+          ]
+        }
+      },
+      {
+        "name": "MarketplaceListing",
+        "type": {
+          "kind": "struct",
+          "fields": [
+            {
+              "name": "ticket_id",
+              "type": "u64"
+            },
+            {
+              "name": "seller",
+              "type": "pubkey"
+            },
+            {
+              "name": "price",
+              "type": "u64"
+            },
+            {
+              "name": "active",
+              "type": "bool"
+            }
+          ]
+        }
+      },
+      {
+        "name": "NewRoundStarted",
+        "type": {
+          "kind": "struct",
+          "fields": [
+            {
+              "name": "round",
+              "type": "u64"
+            }
+          ]
+        }
+      },
+      {
+        "name": "NumberRevealed",
+        "type": {
+          "kind": "struct",
+          "fields": [
+            {
+              "name": "round",
+              "type": "u64"
+            },
+            {
+              "name": "number",
+              "type": "u8"
+            },
+            {
+              "name": "reveal_index",
+              "type": "u8"
+            }
+          ]
+        }
+      },
+      {
+        "name": "PrizeAwarded",
+        "type": {
+          "kind": "struct",
+          "fields": [
+            {
+              "name": "winner",
+              "type": "pubkey"
+            },
+            {
+              "name": "amount",
+              "type": "u64"
+            }
+          ]
+        }
+      },
+      {
+        "name": "Ticket",
+        "type": {
+          "kind": "struct",
+          "fields": [
+            {
+              "name": "numbers",
+              "type": {
+                "array": [
+                  "u8",
+                  6
+                ]
+              }
+            },
+            {
+              "name": "claimed",
+              "type": "bool"
+            },
+            {
+              "name": "owner",
+              "type": "pubkey"
+            },
+            {
+              "name": "mint_time",
+              "type": "i64"
+            }
+          ]
+        }
+      },
+      {
+        "name": "TicketDelisted",
+        "type": {
+          "kind": "struct",
+          "fields": [
+            {
+              "name": "ticket_id",
+              "type": "u64"
+            },
+            {
+              "name": "seller",
+              "type": "pubkey"
+            }
+          ]
+        }
+      },
+      {
+        "name": "TicketListed",
+        "type": {
+          "kind": "struct",
+          "fields": [
+            {
+              "name": "ticket_id",
+              "type": "u64"
+            },
+            {
+              "name": "seller",
+              "type": "pubkey"
+            },
+            {
+              "name": "price",
+              "type": "u64"
+            }
+          ]
+        }
+      },
+      {
+        "name": "TicketMinted",
+        "type": {
+          "kind": "struct",
+          "fields": [
+            {
+              "name": "ticket_id",
+              "type": "u64"
+            },
+            {
+              "name": "owner",
+              "type": "pubkey"
+            },
+            {
+              "name": "numbers",
+              "type": {
+                "array": [
+                  "u8",
+                  6
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "name": "TicketSold",
+        "type": {
+          "kind": "struct",
+          "fields": [
+            {
+              "name": "ticket_id",
+              "type": "u64"
+            },
+            {
+              "name": "seller",
+              "type": "pubkey"
+            },
+            {
+              "name": "buyer",
+              "type": "pubkey"
+            },
+            {
+              "name": "price",
+              "type": "u64"
+            }
+          ]
+        }
+      }
+    ]
+  }

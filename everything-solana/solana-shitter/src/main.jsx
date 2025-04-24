@@ -22,6 +22,9 @@ const endpoint = clusterApiUrl("devnet"); // or 'mainnet-beta'
 
 const wallets = [new PhantomWalletAdapter()];
 
+import * as buffer from "buffer";
+window.Buffer = buffer.Buffer;
+
 createRoot(document.getElementById("root")).render(
   <ConnectionProvider endpoint={endpoint}>
     <WalletProvider wallets={wallets} autoConnect>
