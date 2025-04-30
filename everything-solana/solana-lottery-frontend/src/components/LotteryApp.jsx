@@ -11,7 +11,7 @@ import TicketList from './TicketList';
 import RevealNumbers from './RevealNumbers';
 import Marketplace from './Marketplace';
 
-const programID = new PublicKey('3UJcW6qB7LJJGdJbRqDh4SkWDVGCF15YzkuRtf5nvRJJ');
+const programID = new PublicKey('BzGNGfCEfvbWYTByUicHR3MmcJYz9DwTMHvtrFmaBAgG');
 
 const LotteryApp = () => {
   const { connection } = useConnection();
