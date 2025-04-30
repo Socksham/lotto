@@ -24,7 +24,7 @@ const Navbar = () => {
             </div>
           </div>
           <Link to="/" className="text-xl md:text-2xl font-bold text-white hover:text-purple-300 transition-colors">
-            NumberDrop <span className="text-purple-400">Lottery</span>
+            Gum Drop <span className="text-purple-400">Lottery</span>
           </Link>
         </div>
 
