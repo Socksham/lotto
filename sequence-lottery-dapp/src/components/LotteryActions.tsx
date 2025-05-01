@@ -109,7 +109,7 @@ export const LotteryActions = () => {
             {lottery ? (
               <Box>
                 <Typography>
-                  <strong>Status:</strong> {lottery.state}
+                  <strong>Status:</strong> {lottery.state.toString()}
                 </Typography>
                 <Typography>
                   <strong>Sequence Length:</strong> {lottery.sequenceLength}
@@ -124,7 +124,7 @@ export const LotteryActions = () => {
                   <strong>Prize Amount:</strong> {lottery.prizeAmount / 1000000} USDC
                 </Typography>
                 <Typography>
-                  <strong>Next Ticket ID:</strong> {lottery.nextTicketId}
+                  <strong>Next Ticket ID:</strong> {lottery.nextTicketId.toString()}
                 </Typography>
                 <Typography>
                   <strong>Current Reveal Index:</strong> {lottery.currentRevealIndex}/
@@ -151,7 +151,7 @@ export const LotteryActions = () => {
                                 idx < lottery.currentRevealIndex ? 'white' : 'inherit',
                             }}
                           >
-                            {idx < lottery.currentRevealIndex ? num : '?'}
+                            {idx < lottery.currentRevealIndex ? num.toString() : '?'} {/* Convert to string */}
                           </Paper>
                         ))}
                     </Box>

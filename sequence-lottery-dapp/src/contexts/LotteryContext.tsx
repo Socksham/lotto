@@ -56,70 +56,68 @@ export const LotteryProvider: React.FC<{ children: React.ReactNode }> = ({
   }
 
   const refreshData = async () => {
-    if (!wallet?.publicKey) return
-
-    setLoading(true)
-    setError(null)
+    if (!wallet?.publicKey) return;
+  
+    setLoading(true);
+    setError(null);
     try {
-      const program = getProgram()
+      const program = getProgram();
       if (!program) {
-        setLottery(null)
-        setTickets([])
-        return
+        setLottery(null);
+        setTickets([]);
+        return;
       }
-
+  
       // Fetch lottery account
       const [lotteryPDA] = anchor.web3.PublicKey.findProgramAddressSync(
         [Buffer.from('lottery'), wallet.publicKey.toBuffer()],
         program.programId
-      )
-
-      console.log(program.account)
-
+      );
+  
       try {
-        const lotteryAccount = await program.account.lottery.fetch(lotteryPDA)
+        const lotteryAccount = await program.account.lottery.fetch(lotteryPDA);
         setLottery({
           publicKey: lotteryPDA,
           authority: lotteryAccount.authority,
-          sequenceLength: lotteryAccount.sequenceLength,
-          revealInterval: lotteryAccount.revealInterval,
-          ticketPrice: lotteryAccount.ticketPrice,
-          prizeAmount: lotteryAccount.prizeAmount,
-          nextTicketId: lotteryAccount.nextTicketId,
-          winningSequence: lotteryAccount.winningSequence,
+          sequenceLength: lotteryAccount.sequenceLength.toNumber(), // Convert BN to number
+          revealInterval: lotteryAccount.revealInterval.toNumber(), // Convert BN to number
+          ticketPrice: lotteryAccount.ticketPrice.toNumber(), // Convert BN to number
+          prizeAmount: lotteryAccount.prizeAmount.toNumber(), // Convert BN to number
+          nextTicketId: lotteryAccount.nextTicketId.toNumber(), // Convert BN to number
+          winningSequence: lotteryAccount.winningSequence.map(n => n.toNumber()), // Convert BN[] to number[]
           currentRevealIndex: lotteryAccount.currentRevealIndex,
-          lastRevealTimestamp: lotteryAccount.lastRevealTimestamp,
-          state: lotteryAccount.state,
-        })
+          lastRevealTimestamp: lotteryAccount.lastRevealTimestamp.toNumber(), // Convert if needed
+          state: lotteryAccount.state.toString(), // Convert enum to string
+        });
       } catch (err) {
-        console.log('No lottery account found')
-        setLottery(null)
+        console.log('No lottery account found');
+        setLottery(null);
       }
-
+  
       // Fetch tickets
       try {
-        const ticketAccounts = await program.account.ticket.all()
+        const ticketAccounts = await program.account.ticket.all();
         setTickets(
           ticketAccounts.map((acc) => ({
             publicKey: acc.publicKey,
             owner: acc.account.owner,
             lottery: acc.account.lottery,
-            ticketId: acc.account.ticketId,
-            sequence: acc.account.sequence,
+            ticketId: acc.account.ticketId.toNumber(), // Convert BN to number
+            sequence: acc.account.sequence.map(n => n.toNumber()), // Convert BN[] to number[]
             claimed: acc.account.claimed,
           }))
-        )
+        );
       } catch (err) {
-        console.log('No tickets found')
-        setTickets([])
+        console.log('No tickets found');
+        setTickets([]);
       }
     } catch (err) {
-      console.error('Error refreshing data:', err)
-      setError('Failed to fetch lottery data')
+      console.error('Error refreshing data:', err);
+      setError('Failed to fetch lottery data');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
     refreshData()
@@ -131,23 +129,32 @@ export const LotteryProvider: React.FC<{ children: React.ReactNode }> = ({
     ticketPrice: number,
     prizeAmount: number
   ) => {
-    if (!wallet) throw new Error('Wallet not connected')
-    const program = getProgram()
-    if (!program) throw new Error('Program not initialized')
-
-    setLoading(true)
-    setError(null)
+    if (!wallet || !wallet.publicKey) throw new Error('Wallet not connected');
+    const program = getProgram();
+    if (!program) throw new Error('Program not initialized');
+  
+    setLoading(true);
+    setError(null);
     try {
       const [lotteryPDA] = anchor.web3.PublicKey.findProgramAddressSync(
         [Buffer.from('lottery'), wallet.publicKey.toBuffer()],
         program.programId
-      )
-
+      );
+  
       const [lotteryAuthorityPDA] = anchor.web3.PublicKey.findProgramAddressSync(
         [Buffer.from('lottery'), lotteryPDA.toBuffer()],
         program.programId
-      )
-
+      );
+  
+      // Use a valid SPL token mint address here
+      const mint = new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'); // USDC mint as example
+      
+      // Get the associated token account address
+      const lotteryVault = await anchor.utils.token.associatedAddress({
+        mint,
+        owner: lotteryAuthorityPDA,
+      });
+  
       await program.methods
         .initialize(
           sequenceLength,
@@ -158,20 +165,24 @@ export const LotteryProvider: React.FC<{ children: React.ReactNode }> = ({
         .accounts({
           lottery: lotteryPDA,
           lotteryAuthority: lotteryAuthorityPDA,
+          lotteryVault: lotteryVault,
+          mint: mint,
           authority: wallet.publicKey,
+          tokenProgram: anchor.utils.token.TOKEN_PROGRAM_ID,
           systemProgram: anchor.web3.SystemProgram.programId,
+          rent: anchor.web3.SYSVAR_RENT_PUBKEY,
         })
-        .rpc()
-
-      await refreshData()
+        .rpc();
+  
+      await refreshData();
     } catch (err) {
-      console.error('Error initializing lottery:', err)
-      setError('Failed to initialize lottery')
-      throw err
+      console.error('Error initializing lottery:', err);
+      setError('Failed to initialize lottery. Please check your mint address and try again.');
+      throw err;
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const buyTicket = async (sequence: number[]) => {
     if (!wallet || !lottery) throw new Error('Wallet not connected or no lottery')
