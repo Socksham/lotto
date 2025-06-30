@@ -123,6 +123,21 @@ export const LotteryProvider: React.FC<{ children: React.ReactNode }> = ({
     refreshData()
   }, [wallet, connection])
 
+  async function createAssociatedTokenAccountInstruction(
+    payer: PublicKey,
+    associatedToken: PublicKey,
+    owner: PublicKey,
+    mint: PublicKey
+  ) {
+    return anchor.web3.SystemProgram.createAccount({
+      fromPubkey: payer,
+      newAccountPubkey: associatedToken,
+      space: 165,
+      lamports: await connection.getMinimumBalanceForRentExemption(165),
+      programId: anchor.utils.token.TOKEN_PROGRAM_ID,
+    });
+  }
+
   const initializeLottery = async (
     sequenceLength: number,
     revealInterval: number,
@@ -146,16 +161,36 @@ export const LotteryProvider: React.FC<{ children: React.ReactNode }> = ({
         program.programId
       );
   
-      // Use a valid SPL token mint address here
-      const mint = new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'); // USDC mint as example
+      const mint = new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v');
       
-      // Get the associated token account address
-      const lotteryVault = await anchor.utils.token.associatedAddress({
+      // Correct way to get associated token account address
+      const lotteryVault = await anchor.utils.token.associatedTokenAddress({
         mint,
         owner: lotteryAuthorityPDA,
       });
   
-      await program.methods
+      // Create the associated token account if needed
+      try {
+        const vaultInfo = await connection.getAccountInfo(lotteryVault);
+        if (!vaultInfo) {
+          const createATAInstruction = await createAssociatedTokenAccountInstruction(
+            wallet.publicKey,
+            lotteryVault,
+            lotteryAuthorityPDA,
+            mint
+          );
+          
+          const tx = new anchor.web3.Transaction().add(createATAInstruction);
+          await program.provider.sendAndConfirm(tx);
+          console.log('Created vault account');
+        }
+      } catch (err) {
+        console.log('Vault account check failed:', err);
+        throw new Error('Failed to create vault account');
+      }
+  
+      // Initialize the lottery
+      const txHash = await program.methods
         .initialize(
           sequenceLength,
           new anchor.BN(revealInterval),
@@ -174,10 +209,11 @@ export const LotteryProvider: React.FC<{ children: React.ReactNode }> = ({
         })
         .rpc();
   
+      console.log('Transaction successful:', txHash);
       await refreshData();
     } catch (err) {
-      console.error('Error initializing lottery:', err);
-      setError('Failed to initialize lottery. Please check your mint address and try again.');
+      console.error('Full error details:', err);
+      setError(`Initialization failed: ${err.message}`);
       throw err;
     } finally {
       setLoading(false);
